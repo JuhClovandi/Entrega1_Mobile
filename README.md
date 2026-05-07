@@ -102,3 +102,29 @@ Isso abrirá um menu no seu terminal exibindo um **QR Code**.
 ## 🎨 Protótipo e Design System
 
 A interface do projeto foi desenvolvida para refletir o protótipo UX/UI desenhado previamente. Ele utiliza uma paleta de cores limpa, botões com sombras (elevation) sutis, cantos arredondados modernos (border-radius consistentes) e ícones nativos/emojis otimizados, garantindo o melhor "Look and Feel" aos usuários de ambas as pontas (clientes e profissionais).
+
+---
+
+## 🧪 Qualidade de Software (Testes)
+O projeto conta com uma suíte de 13 testes automatizados que validam o "coração" do sistema. Isso garante que novas funcionalidades não quebrem o que já está funcionando.
+
+--> O que é testado:
+
+- Fluxo de Autenticação: Cadastro de novos usuários e login com geração de Token.
+
+- Proteção de Rotas: Garantia de que usuários não autenticados recebam 401 Unauthorized.
+
+- CRUD de Localidades: Cadastro e listagem de UFs e Cidades.
+
+- Validações: Tentativas de cadastro com e-mail duplicado, senhas incorretas e campos obrigatórios ausentes.
+
+--> Como rodar os testes:
+
+- Para garantir um ambiente limpo para os testes de integração:
+
+- Remova o banco de dados atual: del sqlite.db (ou rm sqlite.db).
+
+- Recrie as tabelas: npm run db:migrate.
+
+- Execute o comando: npm test.
+
