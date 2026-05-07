@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import routes from './routes';
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 1. Middlewares Globais
@@ -20,6 +20,8 @@ app.get('/', (req, res) => {
 app.use('/api', routes);
 
 // 4. Inicialização do Servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
