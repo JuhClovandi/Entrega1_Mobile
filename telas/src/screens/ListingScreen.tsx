@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 
-export default function ListingScreen() {
+export default function ListingScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -23,7 +23,13 @@ export default function ListingScreen() {
                 <Text style={styles.description}>Técnica de T.I especializada em hardware e redes.</Text>
               </View>
             </View>
-            <View style={styles.cardFooter} />
+            <TouchableOpacity
+              style={styles.cardFooter}
+              onPress={() => navigation.navigate('RequestService')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cardFooterText}>Solicitar servico</Text>
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -46,5 +52,14 @@ const styles = StyleSheet.create({
   rating: { fontSize: 12, fontWeight: 'normal', color: '#F2C94C' },
   distance: { fontSize: 10, color: '#999', position: 'absolute', right: 0 },
   description: { fontSize: 12, color: '#666', marginTop: 5 },
-  cardFooter: { height: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginTop: 10 }
+  cardFooter: {
+    height: 26,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 13,
+    marginTop: 10,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  cardFooterText: { fontSize: 12, color: '#333' }
 });

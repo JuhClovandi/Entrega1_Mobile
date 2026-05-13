@@ -1,66 +1,177 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 
-export default function RequestServiceScreen() {
+export default function RequestServiceScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
-        <Text style={styles.headerTitle}>Solicitar Serviço</Text>
-        
-        {/* Profile Card */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backIcon}>{'<'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Solicitar Servico</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileCard}>
-           <View style={styles.avatar} />
-           <View>
-             <Text style={styles.name}>Ana <Text style={styles.rating}>⭐ 4.9</Text></Text>
-             <Text style={styles.desc}>Técnica de T.I</Text>
-           </View>
+          <View style={styles.avatar} />
+          <View style={styles.profileInfo}>
+            <View style={styles.profileRow}>
+              <Text style={styles.name}>Ana</Text>
+              <Text style={styles.rating}>* 4.9</Text>
+            </View>
+            <Text style={styles.desc}>Tecnica de T.I especializada em hardware e redes.</Text>
+          </View>
+          <Text style={styles.distance}>a 1.8km de voce</Text>
         </View>
 
-        <Text style={styles.label}>O que você precisa? *</Text>
-        <TextInput style={[styles.input, styles.textArea]} multiline placeholder="Descreva com detalhes..." />
+        <Text style={styles.label}>O que voce precisa? *</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          multiline
+          placeholder="Descreva com detalhes o servico que voce precisa..."
+          placeholderTextColor="#6E7681"
+        />
 
-        <Text style={styles.label}>Anexo de mídia:</Text>
+        <Text style={styles.label}>Anexo de midia:</Text>
         <View style={styles.mediaBox} />
 
         <View style={styles.row}>
           <View style={styles.halfWidth}>
             <Text style={styles.label}>Data:</Text>
-            <TextInput style={styles.input} placeholder="00/00/0000" />
+            <TextInput
+              style={styles.inputSmall}
+              placeholder="00/00/0000"
+              placeholderTextColor="#6E7681"
+            />
           </View>
           <View style={styles.halfWidth}>
-            <Text style={styles.label}>Horário:</Text>
-            <TextInput style={styles.input} placeholder="00:00" />
+            <Text style={styles.label}>Horario:</Text>
+            <TextInput
+              style={styles.inputSmall}
+              placeholder="00:00"
+              placeholderTextColor="#6E7681"
+            />
           </View>
         </View>
 
-        <Text style={styles.label}>Local do Serviço:</Text>
-        <TextInput style={[styles.input, { height: 80 }]} multiline />
+        <Text style={styles.label}>Local do Servico:</Text>
+        <TextInput
+          style={[styles.input, styles.locationBox]}
+          multiline
+          placeholderTextColor="#6E7681"
+        />
 
-        <Text style={styles.termsText}>Ao enviar, você concorda com os Termos de Uso</Text>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Solicitar Orçamento</Text>
+        <Text style={styles.termsText}>Ao enviar, voce concorda com os Termos de Uso</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Main', { screen: 'Chat' })}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>Solicitar Orcamento</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <View style={styles.tabBar}>
+        {[
+          { label: 'Home', icon: '🏠', screen: 'Home' },
+          { label: 'Serviços', icon: '🗓️', screen: 'Serviços' },
+          { label: 'Histórico', icon: '📋', screen: 'Histórico' },
+          { label: 'Chat', icon: '💬', screen: 'Chat' },
+          { label: 'Perfil', icon: '👤', screen: 'Perfil' },
+        ].map((item) => (
+          <TouchableOpacity
+            key={item.screen}
+            style={styles.tabItem}
+            onPress={() => navigation.navigate('Main', { screen: item.screen })}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.tabIcon}>{item.icon}</Text>
+            <Text style={styles.tabLabel}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: '#3B82F6',
+  },
+  backButton: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 18, color: '#333' },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '600', color: '#333' },
+  headerSpacer: { width: 36 },
   content: { padding: 20 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  profileCard: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#ccc', marginRight: 15 },
-  name: { fontWeight: 'bold', fontSize: 16 },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 20,
+  },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#ccc', marginRight: 10 },
+  profileInfo: { flex: 1 },
+  profileRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  name: { fontWeight: '600', fontSize: 14, color: '#111' },
   rating: { fontSize: 12, color: '#F2C94C' },
-  desc: { fontSize: 12, color: '#666' },
-  label: { fontSize: 12, color: '#666', marginBottom: 5 },
-  input: { backgroundColor: '#A0A4AB', borderRadius: 15, paddingHorizontal: 15, marginBottom: 15, color: '#fff' },
-  textArea: { height: 80, paddingTop: 10 },
-  mediaBox: { backgroundColor: '#A0A4AB', height: 60, borderRadius: 15, marginBottom: 15 },
+  desc: { fontSize: 11, color: '#666', marginTop: 2 },
+  distance: { fontSize: 10, color: '#666' },
+  label: { fontSize: 12, color: '#666', marginBottom: 6, marginLeft: 4 },
+  input: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    color: '#333',
+    marginBottom: 16,
+  },
+  textArea: { height: 70, paddingTop: 12 },
+  mediaBox: { backgroundColor: '#A0A4AB', height: 50, borderRadius: 20, marginBottom: 16 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   halfWidth: { width: '48%' },
-  termsText: { fontSize: 10, textAlign: 'center', color: '#666', marginTop: 10, marginBottom: 10 },
-  button: { backgroundColor: '#A0A4AB', borderRadius: 25, height: 50, justifyContent: 'center', alignItems: 'center' },
-  buttonText: { fontSize: 16 }
+  inputSmall: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 20,
+    height: 36,
+    textAlign: 'center',
+    color: '#333',
+    paddingTop: 4,
+    marginBottom: 16,
+  },
+  locationBox: { height: 70, paddingTop: 12 },
+  termsText: { fontSize: 11, textAlign: 'center', color: '#666', marginTop: 6, marginBottom: 14 },
+  button: {
+    backgroundColor: '#A0A4AB',
+    borderRadius: 24,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  buttonText: { fontSize: 14, color: '#333' },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#A0A4AB',
+    height: 62,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#90949B',
+  },
+  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tabIcon: { fontSize: 18, color: '#111', marginBottom: 2 },
+  tabLabel: { fontSize: 11, color: '#111' },
 });

@@ -12,7 +12,7 @@ export default function WelcomeScreen({ navigation }: any) {
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('RoleScreen')}>
           <Text style={styles.buttonText}>Criar conta</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Main')}>
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
       </View>
