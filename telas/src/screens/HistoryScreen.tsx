@@ -13,10 +13,19 @@ export default function HistoryScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.grid}>
-        {[1, 2, 3, 4, 5, 6].map((item) => (
-          <View key={item} style={styles.historyCard}>
+        {[
+          'Configuração de PC',
+          'Limpeza',
+          'Restauração',
+          'Upgrade',
+          'Montagem',
+          'Tecnologia',
+          'Baixar programas',
+          'Instalação de cooler',
+        ].map((title, index) => (
+          <View key={`${title}-${index}`} style={styles.historyCard}>
             <Text style={styles.icon}>💻</Text>
-            <Text style={styles.cardText}>Serviço de PC</Text>
+            <Text style={styles.cardText}>{title}</Text>
           </View>
         ))}
       </ScrollView>

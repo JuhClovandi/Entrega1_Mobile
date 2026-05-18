@@ -7,6 +7,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+  Image,
 } from "react-native";
 
 export default function RegisterProScreen({ navigation }: any) {
@@ -18,7 +19,7 @@ export default function RegisterProScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.logoText}>ServLink</Text>
+          <Image source={require('../../assets/images/Logo.png')} style={styles.logoImage} resizeMode="contain" />
           <Text style={styles.title}>Criar Conta</Text>
         </View>
 
@@ -73,11 +74,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
+  logoImage: { width: 276, height: 96, marginBottom: 6 },
   title: {
     fontSize: 20,
     fontWeight: "bold",

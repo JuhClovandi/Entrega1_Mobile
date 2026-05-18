@@ -5,13 +5,14 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 
 export default function RoleScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.logoText}>seraLink</Text>
+        <Image source={require('../../assets/images/Logo.png')} style={styles.logoImage} resizeMode="contain" />
         <Text style={styles.subtitle}>
           Conectando você{"\n"}ao serviço certo
         </Text>
@@ -46,11 +47,12 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   content: { alignItems: "center", marginTop: 40 },
-  logoText: { fontSize: 32, fontWeight: "bold", marginBottom: 20 },
+  logoImage: { width: 276, height: 96, marginBottom: 10 },
   subtitle: {
-    fontSize: 20,
+    fontSize: 35,
     textAlign: "center",
-    color: "#666",
+    color: "#111",
+    marginTop: 35,
     marginBottom: 40,
   },
   question: { fontSize: 16, fontWeight: "bold" },

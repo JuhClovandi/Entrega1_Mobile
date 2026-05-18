@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -9,7 +9,7 @@ export default function HomeScreen() {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qual servico voce precisa?"
+            placeholder="Qual serviço você precisa?"
             placeholderTextColor="#6E7681"
           />
         </View>
@@ -18,7 +18,7 @@ export default function HomeScreen() {
         <View style={styles.categoriesGrid}>
           {[
             { label: 'Limpeza', icon: '🧹' },
-            { label: 'Manutencao', icon: '🛠️' },
+            { label: 'Manutenção', icon: '🛠️' },
             { label: 'Tecnologia', icon: '💻' },
             { label: 'Aulas', icon: '📚' },
           ].map((item) => (
@@ -29,7 +29,7 @@ export default function HomeScreen() {
           ))}
           <View style={styles.categoryCardWide}>
             <Text style={styles.categoryIcon}>❤️</Text>
-            <Text style={styles.categoryLabel}>Saude</Text>
+            <Text style={styles.categoryLabel}>Saúde</Text>
           </View>
         </View>
 
@@ -37,15 +37,23 @@ export default function HomeScreen() {
         <View style={styles.recommendedRow}>
           {[{ rating: '4.8' }, { rating: '4.9' }].map((p, index) => (
             <View key={index} style={styles.recommendedCard}>
-              <View style={styles.recommendedAvatar} />
+              <Image
+                source={require('../../assets/images/PerfilRecomendado.jpeg')}
+                style={styles.recommendedAvatar}
+                resizeMode="cover"
+              />
               <View style={styles.recommendedRating}>
                 <Text style={styles.star}>★</Text>
                 <Text style={styles.ratingText}>{p.rating}</Text>
               </View>
               <Text style={styles.recommendedName}>Nome</Text>
-              <View style={styles.profileButton}>
+              <TouchableOpacity
+                style={styles.profileButton}
+                onPress={() => navigation.navigate('Perfil')}
+                activeOpacity={0.8}
+              >
                 <Text style={styles.profileButtonText}>Ver perfil</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           ))}
         </View>

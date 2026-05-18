@@ -1,5 +1,32 @@
 import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+
+const PROFESSIONALS = [
+  {
+    id: '1',
+    name: 'Ana',
+    rating: '4.9',
+    distance: 'a 1.8km de você',
+    description: 'Técnica de T.I especializada em hardware e redes.',
+    avatar: require('../../assets/images/FotoPerfil.png'),
+  },
+  {
+    id: '2',
+    name: 'Maria',
+    rating: '4.8',
+    distance: 'a 2.5km de você',
+    description: 'Especialista em manutenção de computadores.',
+    avatar: require('../../assets/images/FotoMaria.png'),
+  },
+  {
+    id: '3',
+    name: 'Marcos',
+    rating: '4.5',
+    distance: 'a 3.2km de você',
+    description: 'Assistência técnica para PC’s e instalação de computadores.',
+    avatar: require('../../assets/images/FotoMarcos.png'),
+  },
+];
 
 export default function ListingScreen({ navigation }: any) {
   return (
@@ -13,14 +40,20 @@ export default function ListingScreen({ navigation }: any) {
       </View>
 
       <ScrollView style={styles.list}>
-        {[1, 2, 3].map((item) => (
-          <View key={item} style={styles.card}>
+        {PROFESSIONALS.map((item) => (
+          <View key={item.id} style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={styles.avatar} />
+              {item.avatar ? (
+                <Image source={item.avatar} style={styles.avatar} resizeMode="cover" />
+              ) : (
+                <View style={styles.avatar} />
+              )}
               <View style={styles.info}>
-                <Text style={styles.name}>Ana <Text style={styles.rating}>⭐ 4.9</Text></Text>
-                <Text style={styles.distance}>a 1.8km de você</Text>
-                <Text style={styles.description}>Técnica de T.I especializada em hardware e redes.</Text>
+                <Text style={styles.name}>
+                  {item.name} <Text style={styles.rating}>⭐ {item.rating}</Text>
+                </Text>
+                <Text style={styles.distance}>{item.distance}</Text>
+                <Text style={styles.description}>{item.description}</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -28,7 +61,7 @@ export default function ListingScreen({ navigation }: any) {
               onPress={() => navigation.navigate('RequestService')}
               activeOpacity={0.8}
             >
-              <Text style={styles.cardFooterText}>Solicitar servico</Text>
+              <Text style={styles.cardFooterText}>Solicitar serviço</Text>
             </TouchableOpacity>
           </View>
         ))}

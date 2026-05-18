@@ -1,13 +1,13 @@
-import React from "react";
+import React from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function EditProfileScreen({ navigation }: any) {
   return (
@@ -16,132 +16,125 @@ export default function EditProfileScreen({ navigation }: any) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Cabeçalho com botão de voltar */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>{"<"}</Text>
+        <View style={styles.headerBar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>{'<'}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Seção da Foto de Perfil e Nome */}
         <View style={styles.profileSection}>
-          {/* O avatar ficaria aqui. Usando View como placeholder */}
           <View style={styles.avatar} />
-
-          <TextInput
-            style={styles.nameInput}
-            placeholder="nome"
-            textAlign="center"
-          />
+          <TextInput style={styles.nameInput} placeholder="nome" textAlign="center" />
         </View>
 
-        {/* Seção de Portfólio */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Portfólio</Text>
-          <Text style={styles.sectionSubtitle}>Insira as imagens</Text>
-
+          <Text style={styles.sectionTitle}>Insira as imagens</Text>
           <View style={styles.portfolioGrid}>
-            {/* Quadrados para inserir as imagens */}
             <TouchableOpacity style={styles.portfolioBox} />
             <TouchableOpacity style={styles.portfolioBox} />
             <TouchableOpacity style={styles.portfolioBox} />
           </View>
         </View>
 
-        {/* Seção Sobre Mim */}
         <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Sobre</Text>
           <TextInput
             style={styles.textArea}
-            placeholder="me conte mais sobre você:"
-            multiline={true}
+            placeholder=""
+            multiline
             numberOfLines={5}
-            textAlignVertical="top" // Faz o texto começar do topo no Android
+            textAlignVertical="top"
           />
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Serviço</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder=""
+            multiline
+            numberOfLines={5}
+            textAlignVertical="top"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={() => navigation.navigate('Main', { screen: 'Perfil' })}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  content: { paddingBottom: 40 },
+  headerBar: {
+    backgroundColor: '#A0A4AB',
+    height: 70,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
   },
-  content: {
-    paddingBottom: 40,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-  },
-  backText: {
-    fontSize: 24,
-    color: "#333",
-  },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
+  backButton: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
+  backText: { fontSize: 18, color: '#111' },
+  profileSection: { alignItems: 'center', marginTop: -28, marginBottom: 20 },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#A0A4AB", // Cor de placeholder
-    marginBottom: -15, // Para o input sobrepor um pouco, como no protótipo
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#A0A4AB',
+    borderWidth: 2,
+    borderColor: '#fff',
+    marginBottom: 0,
     zIndex: 1,
   },
   nameInput: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 20,
+    borderColor: '#333',
+    borderRadius: 18,
     width: 150,
-    height: 40,
-    paddingHorizontal: 15,
-    zIndex: 2, // Garante que fique por cima da imagem
+    height: 36,
+    paddingHorizontal: 12,
+    paddingTop: 3,
+    paddingBottom: 5,
+    marginTop: 8,
+    textAlignVertical: 'center',
+    zIndex: 2,
   },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: "#333",
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 10,
-  },
-  portfolioGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+  section: { paddingHorizontal: 20, marginBottom: 20 },
+  sectionTitle: { fontSize: 14, color: '#111', textAlign: 'center', marginBottom: 8 },
+  sectionLabel: { fontSize: 14, color: '#111', textAlign: 'center', marginBottom: 8 },
+  portfolioGrid: { flexDirection: 'row', justifyContent: 'space-between' },
   portfolioBox: {
-    width: "30%",
-    aspectRatio: 1, // Mantém o elemento sempre quadrado
+    width: '30%',
+    aspectRatio: 1,
     borderWidth: 1,
-    borderColor: "#A0A4AB",
+    borderColor: '#333',
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   textArea: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: "#A0A4AB",
-    borderRadius: 15,
-    padding: 15,
-    height: 120, // Altura maior para a caixa de texto
-    fontSize: 14,
+    borderColor: '#333',
+    borderRadius: 16,
+    padding: 12,
+    height: 120,
+    fontSize: 12,
   },
+  saveButton: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+  },
+  saveButtonText: { fontSize: 12, color: '#111' },
 });

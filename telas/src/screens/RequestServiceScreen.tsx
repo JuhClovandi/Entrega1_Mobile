@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image } from 'react-native';
 
 export default function RequestServiceScreen({ navigation }: any) {
   return (
@@ -8,32 +8,36 @@ export default function RequestServiceScreen({ navigation }: any) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Solicitar Servico</Text>
+        <Text style={styles.headerTitle}>Solicitar Serviço</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileCard}>
-          <View style={styles.avatar} />
+          <Image
+            source={require('../../assets/images/FotoPerfil.png')}
+            style={styles.avatar}
+            resizeMode="cover"
+          />
           <View style={styles.profileInfo}>
             <View style={styles.profileRow}>
               <Text style={styles.name}>Ana</Text>
               <Text style={styles.rating}>* 4.9</Text>
             </View>
-            <Text style={styles.desc}>Tecnica de T.I especializada em hardware e redes.</Text>
+            <Text style={styles.desc}>Técnica de T.I especializada em hardware e redes.</Text>
           </View>
-          <Text style={styles.distance}>a 1.8km de voce</Text>
+          <Text style={styles.distance}>a 1.8km de você</Text>
         </View>
 
-        <Text style={styles.label}>O que voce precisa? *</Text>
+        <Text style={styles.label}>O que você precisa? *</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           multiline
-          placeholder="Descreva com detalhes o servico que voce precisa..."
+          placeholder="Descreva com detalhes o serviço que você precisa..."
           placeholderTextColor="#6E7681"
         />
 
-        <Text style={styles.label}>Anexo de midia:</Text>
+        <Text style={styles.label}>Anexo de mídia:</Text>
         <View style={styles.mediaBox} />
 
         <View style={styles.row}>
@@ -46,7 +50,7 @@ export default function RequestServiceScreen({ navigation }: any) {
             />
           </View>
           <View style={styles.halfWidth}>
-            <Text style={styles.label}>Horario:</Text>
+            <Text style={styles.label}>Horário:</Text>
             <TextInput
               style={styles.inputSmall}
               placeholder="00:00"
@@ -55,20 +59,20 @@ export default function RequestServiceScreen({ navigation }: any) {
           </View>
         </View>
 
-        <Text style={styles.label}>Local do Servico:</Text>
+        <Text style={styles.label}>Local do Serviço:</Text>
         <TextInput
           style={[styles.input, styles.locationBox]}
           multiline
           placeholderTextColor="#6E7681"
         />
 
-        <Text style={styles.termsText}>Ao enviar, voce concorda com os Termos de Uso</Text>
+        <Text style={styles.termsText}>Ao enviar, você concorda com os Termos de Uso</Text>
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate('Main', { screen: 'Chat' })}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Solicitar Orcamento</Text>
+          <Text style={styles.buttonText}>Solicitar Orçamento</Text>
         </TouchableOpacity>
       </ScrollView>
 

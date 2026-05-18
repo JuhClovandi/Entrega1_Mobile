@@ -7,6 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Image,
 } from "react-native";
 
 export default function RegisterScreen({ navigation }: any) {
@@ -14,7 +15,7 @@ export default function RegisterScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.logoText}>ServLink</Text>
+          <Image source={require('../../assets/images/Logo.png')} style={styles.logoImage} resizeMode="contain" />
           <Text style={styles.title}>Criar Conta</Text>
         </View>
 
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   header: { alignItems: "center", marginBottom: 20 },
-  logoText: { fontSize: 32, fontWeight: "bold", marginBottom: 10 },
+  logoImage: { width: 276, height: 96, marginBottom: 6 },
   title: { fontSize: 20, fontWeight: "bold" },
   form: { width: "100%", paddingHorizontal: 40 },
   label: { fontSize: 12, color: "#666", marginBottom: 5, marginLeft: 5 },
