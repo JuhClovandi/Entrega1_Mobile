@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+// Import correto para evitar avisos de depreciação no terminal do Expo
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PROFESSIONALS = [
   {
@@ -66,6 +68,15 @@ export default function ListingScreen({ navigation }: any) {
           </View>
         ))}
       </ScrollView>
+
+      {/* ➕ BOTÃO FLUTUANTE (FAB) PARA O PROFISSIONAL CRIAR SEU SERVIÇO */}
+      <TouchableOpacity 
+        style={styles.fabButton} 
+        onPress={() => navigation.navigate('CreateProService')}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -92,7 +103,32 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     marginTop: 10,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center' // 🔑 CORRIGIDO: Fechamento de aspas simples que faltava
   },
-  cardFooterText: { fontSize: 12, color: '#333' }
+  cardFooterText: { fontSize: 12, color: '#333' },
+  
+  // Estilização do Botão Flutuante (FAB) integrado ao seu tema
+  fabButton: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#333', // Cor escura para contrastar bem com o fundo claro
+    borderRadius: 28,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 4,
+  },
+  fabIcon: {
+    fontSize: 28,
+    color: '#FFF',
+    fontWeight: 'bold',
+    lineHeight: 28,
+    marginBottom: 2
+  },
 });

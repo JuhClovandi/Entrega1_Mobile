@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import CreateProServiceScreen from './src/screens/CreateProServiceScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import RoleScreen from './src/screens/RoleScreen';
 import RegisterScreen from './src/screens/RegisterScreen'; 
@@ -17,6 +18,8 @@ import ChatDetailScreen from './src/screens/ChatDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import RequestServiceScreen from './src/screens/RequestServiceScreen';
+
+import LoginScreen from './src/screens/LoginScreen'; 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -73,19 +76,25 @@ function MainTabs() {
   );
 }
 
+// Navegador Principal em Pilha (Stack)
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         
-        {}
+        {/* Fluxo Inicial de Telas Soltas */}
         <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
         
+        {/* 🔑 ADICIONADO: Cadastrando a tela de Login no GPS do aplicativo */}
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="CreateProService" component={CreateProServiceScreen} />
         <Stack.Screen name="RoleScreen" component={RoleScreen} />
         <Stack.Screen name="RegisterClient" component={RegisterScreen} /> 
         <Stack.Screen name="RegisterPro" component={RegisterProScreen} /> 
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        
+        {/* Telas internas e sub-fluxos */}
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="RequestService" component={RequestServiceScreen} />
         <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
