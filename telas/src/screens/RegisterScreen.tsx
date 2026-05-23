@@ -9,6 +9,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  Platform, // 1. O Platform foi importado aqui em cima
 } from "react-native";
 
 export default function RegisterScreen({ navigation }: any) {
@@ -17,6 +18,11 @@ export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmeSenha, setConfirmeSenha] = useState("");
+
+  // 2. AQUI ESTÁ ELA! Logo abaixo dos estados e antes do handleRegister
+  const API_URL = Platform.OS === "web" 
+    ? "http://localhost:3000" 
+    : "http:/10.65.188.162:3000";
 
   const handleRegister = async () => {
     if (!nome || !email || !senha || !confirmeSenha) {
@@ -30,7 +36,8 @@ export default function RegisterScreen({ navigation }: any) {
     }
 
     try {
-      const response = await fetch("http://192.168.1.5:3000/api/register/user", {
+      // 3. O fetch agora usa a variável com a crase ` `
+      const response = await fetch(`${API_URL}/api/register/user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +58,7 @@ export default function RegisterScreen({ navigation }: any) {
         Alert.alert("Erro", data.message || "Erro ao criar conta.");
       }
     } catch (error) {
-      console.error(error); // Evita o aviso do ESLint e ajuda no debug
+      console.error(error);
       Alert.alert("Erro", "Não foi possível conectar ao servidor.");
     }
   };

@@ -18,11 +18,9 @@ export default function CreateProServiceScreen({ navigation }: any) {
     setLoading(true);
 
     try {
-      // Puxa o token do profissional logado
       const token = await AsyncStorage.getItem('@token_usuario');
 
-      // 🔗 Rota do seu backend para o profissional adicionar serviços
-      const response = await fetch("http://192.168.1.5:3000/api/profissional/servicos", {
+      const response = await fetch("http://localhost:3000/api/profissional/servicos", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -36,14 +34,12 @@ export default function CreateProServiceScreen({ navigation }: any) {
         }),
       });
 
-      // 🛡️ CAPTURA SEGURO: Evita o crash se o backend devolver HTML de erro
       const textResponse = await response.text(); 
       
       let data;
       try {
         data = JSON.parse(textResponse);
       } catch {
-  // Se cair aqui, significa que o backend retornou um erro em HTML puro
   console.error("⚠️ O BACKEND RETORNOU HTML EM VEZ DE JSON. Resposta do servidor:\n", textResponse);
   Alert.alert("Erro no Servidor", "O servidor encontrou um problema interno ao processar o banco de dados.");
   setLoading(false);

@@ -26,7 +26,7 @@ export default function RegisterProScreen({ navigation }: any) {
     }
 
     try {
-      const response = await fetch("http://192.168.1.5:3000/api/register/pro", {
+      const response = await fetch("http://localhost:3000/api/register/pro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
