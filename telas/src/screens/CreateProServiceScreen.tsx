@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config'; 
 
 export default function CreateProServiceScreen({ navigation }: any) {
   const [nomeServico, setNomeServico] = useState('');
@@ -10,7 +11,7 @@ export default function CreateProServiceScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
 
   const handleSaveService = async () => {
-    if (!nomeServico || !precoBase || !tempoEstimado || !descricao) {
+    if (!nomeServico.trim() || !precoBase.trim() || !tempoEstimado.trim() || !descricao.trim()) {
       Alert.alert("Erro", "Por favor, preencha todos os campos para catalogar seu serviço.");
       return;
     }
@@ -18,49 +19,73 @@ export default function CreateProServiceScreen({ navigation }: any) {
     setLoading(true);
 
     try {
-      const token = await AsyncStorage.getItem('@token_usuario');
+      const token = await AsyncStorage.getItem('@token_jwt');
+      const precoConvertido = parseFloat(precoBase.replace(',', '.'));
+      
+      if (isNaN(precoConvertido)) {
+        Alert.alert("Erro", "Por favor, insira um valor numérico válido para o preço.");
+        setLoading(false);
+        return;
+      }
 
-      const response = await fetch("http://localhost:3000/api/profissional/servicos", {
+      const response = await fetch(`${API_URL}/api/profissional/servicos`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({ 
-          nome: nomeServico, 
-          preco: parseFloat(precoBase.replace(',', '.')), 
-          tempo_estimado: tempoEstimado, 
-          descricao 
+          nome: nomeServico.trim(), 
+          preco: precoConvertido, 
+          tempo_estimado: tempoEstimado.trim(), 
+          descricao: descricao.trim()
         }),
       });
 
       const textResponse = await response.text(); 
-      
       let data;
+      
       try {
         data = JSON.parse(textResponse);
       } catch {
-  console.error("⚠️ O BACKEND RETORNOU HTML EM VEZ DE JSON. Resposta do servidor:\n", textResponse);
-  Alert.alert("Erro no Servidor", "O servidor encontrou um problema interno ao processar o banco de dados.");
-  setLoading(false);
-  return;
-}
+        console.error("⚠️ Erro no parsing. Resposta bruta do servidor:\n", textResponse);
+        Alert.alert("Erro no Servidor", "Ocorreu um problema ao salvar os dados no banco backend.");
+        setLoading(false);
+        return;
+      }
 
       if (response.ok) {
         Alert.alert("Sucesso", "Serviço adicionado ao seu catálogo com sucesso!");
         
-        // Limpa o formulário
+        const newProfessional = {
+          id: data?.id ? String(data.id) : String(Date.now()), 
+          name: nomeServico.trim(), 
+          description: descricao.trim(),
+          rating: '5.0', 
+          distance: 'Preço: R$ ' + precoConvertido.toFixed(2), 
+          avatar: null
+        };
+
+        // Limpa o formulário antes de voltar
         setNomeServico('');
         setPrecoBase('');
         setTempoEstimado('');
         setDescricao('');
         
-        navigation.goBack();
+        // 🚀 SOLUÇÃO BLINDADA: Em vez de adivinhar o nome da tela anterior, passamos os parâmetros
+        // para a rota que chamou esta tela usando navigate({ merge: true }) combinado com goBack()
+        navigation.navigate({
+          name: navigation.getState().routes[navigation.getState().index - 1]?.name, 
+          params: { newProfessional },
+          merge: true,
+        });
+
       } else {
         Alert.alert("Erro", data.message || "Não foi possível salvar o serviço.");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Erro na requisição de salvar serviço:", error);
       Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
@@ -68,7 +93,7 @@ export default function CreateProServiceScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Oferecer Novo Serviço</Text>
       <Text style={styles.subtitle}>Adicione serviços ao seu perfil para que os clientes possam te contratar</Text>
 

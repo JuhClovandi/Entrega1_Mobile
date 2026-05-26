@@ -1,80 +1,79 @@
-import React from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
-// Import correto para evitar avisos de depreciação no terminal do Expo
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const PROFESSIONALS = [
-  {
-    id: '1',
-    name: 'Ana',
-    rating: '4.9',
-    distance: 'a 1.8km de você',
-    description: 'Técnica de T.I especializada em hardware e redes.',
-    avatar: require('../../assets/images/FotoPerfil.png'),
-  },
-  {
-    id: '2',
-    name: 'Maria',
-    rating: '4.8',
-    distance: 'a 2.5km de você',
-    description: 'Especialista em manutenção de computadores.',
-    avatar: require('../../assets/images/FotoMaria.png'),
-  },
-  {
-    id: '3',
-    name: 'Marcos',
-    rating: '4.5',
-    distance: 'a 3.2km de você',
-    description: 'Assistência técnica para PC’s e instalação de computadores.',
-    avatar: require('../../assets/images/FotoMarcos.png'),
-  },
-];
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config'; 
 
 export default function ListingScreen({ navigation }: any) {
+  const [search, setSearch] = useState('');
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Busca os serviços no Backend
+ const loadServices = async () => {
+  try {
+    setLoading(true);
+    const token = await AsyncStorage.getItem('@token_jwt');
+    
+    const response = await fetch(`${API_URL}/api/profissional/servicos`, {
+      method: 'GET', // Garanta que o método seja GET
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // VERIFICAÇÃO DE RESPOSTA
+    if (!response.ok) {
+      // Se não for 200-299, lança um erro com o status
+      throw new Error(`Erro ${response.status}: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    setServices(data);
+  } catch (error: any) {
+    console.error("DETALHE DO ERRO:", error); // ISSO VAI MOSTRAR O ERRO NO SEU TERMINAL
+    Alert.alert("Erro de Conexão", `Não foi possível carregar: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useFocusEffect(useCallback(() => { loadServices(); }, []));
+
+  const filtered = services.filter(s => s.nome.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TextInput style={styles.searchInput} placeholder="Concerto de PC" />
-        <View style={styles.filters}>
-          <Text style={styles.filterChip}>Melhor avaliados</Text>
-          <Text style={styles.filterChip}>Mais próximos</Text>
-        </View>
+        <TextInput 
+          style={styles.searchInput} 
+          placeholder="Buscar serviço..." 
+          value={search}
+          onChangeText={setSearch}
+        />
       </View>
 
-      <ScrollView style={styles.list}>
-        {PROFESSIONALS.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              {item.avatar ? (
-                <Image source={item.avatar} style={styles.avatar} resizeMode="cover" />
-              ) : (
-                <View style={styles.avatar} />
-              )}
-              <View style={styles.info}>
-                <Text style={styles.name}>
-                  {item.name} <Text style={styles.rating}>⭐ {item.rating}</Text>
-                </Text>
-                <Text style={styles.distance}>{item.distance}</Text>
-                <Text style={styles.description}>{item.description}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.cardFooter}
-              onPress={() => navigation.navigate('RequestService')}
-              activeOpacity={0.8}
+      <ScrollView contentContainerStyle={styles.listContent}>
+        {loading ? <ActivityIndicator size="large" color="#333" /> : (
+          filtered.map((item) => (
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.card}
+              onPress={() => navigation.navigate('ServiceDetail', { service: item })}
             >
-              <Text style={styles.cardFooterText}>Solicitar serviço</Text>
+              <Text style={styles.name}>{item.nome}</Text>
+              <Text style={styles.price}>R$ {item.preco}</Text>
+              <Text style={styles.description} numberOfLines={2}>{item.descricao}</Text>
+              <Text style={styles.link}>Toque para ver detalhes</Text>
             </TouchableOpacity>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
-      {/* ➕ BOTÃO FLUTUANTE (FAB) PARA O PROFISSIONAL CRIAR SEU SERVIÇO */}
-      <TouchableOpacity 
-        style={styles.fabButton} 
-        onPress={() => navigation.navigate('CreateProService')}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.fabButton} onPress={() => navigation.navigate('CreateProService')}>
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -82,53 +81,15 @@ export default function ListingScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
   header: { padding: 20 },
-  searchInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', borderRadius: 25, height: 45, paddingHorizontal: 20, marginBottom: 15 },
-  filters: { flexDirection: 'row', justifyContent: 'space-around' },
-  filterChip: { backgroundColor: '#ccc', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 15, fontSize: 12 },
-  list: { paddingHorizontal: 20 },
-  card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 15, marginBottom: 15 },
-  cardHeader: { flexDirection: 'row' },
-  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#ccc', marginRight: 15 },
-  info: { flex: 1 },
-  name: { fontWeight: 'bold', fontSize: 16 },
-  rating: { fontSize: 12, fontWeight: 'normal', color: '#F2C94C' },
-  distance: { fontSize: 10, color: '#999', position: 'absolute', right: 0 },
-  description: { fontSize: 12, color: '#666', marginTop: 5 },
-  cardFooter: {
-    height: 26,
-    borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 13,
-    marginTop: 10,
-    justifyContent: 'center',
-    alignItems: 'center' // 🔑 CORRIGIDO: Fechamento de aspas simples que faltava
-  },
-  cardFooterText: { fontSize: 12, color: '#333' },
-  
-  // Estilização do Botão Flutuante (FAB) integrado ao seu tema
-  fabButton: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#333', // Cor escura para contrastar bem com o fundo claro
-    borderRadius: 28,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 4,
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: '#FFF',
-    fontWeight: 'bold',
-    lineHeight: 28,
-    marginBottom: 2
-  },
+  searchInput: { backgroundColor: '#FFF', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#DDD' },
+  listContent: { padding: 20, paddingBottom: 100 },
+  card: { backgroundColor: '#fff', padding: 20, borderRadius: 16, marginBottom: 16, elevation: 3 },
+  name: { fontSize: 18, fontWeight: 'bold' },
+  price: { color: '#27AE60', fontWeight: 'bold', marginVertical: 4 },
+  description: { color: '#666', fontSize: 14 },
+  link: { fontSize: 12, color: '#333', marginTop: 10, textAlign: 'right', textDecorationLine: 'underline' },
+  fabButton: { position: 'absolute', width: 56, height: 56, borderRadius: 28, backgroundColor: '#333', right: 20, bottom: 20, alignItems: 'center', justifyContent: 'center' },
+  fabIcon: { fontSize: 28, color: '#FFF' }
 });

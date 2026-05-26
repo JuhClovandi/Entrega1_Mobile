@@ -15,8 +15,6 @@ app.get('/', (req, res) => {
 
 app.use('/api', routes);
 
-if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
   });
-}

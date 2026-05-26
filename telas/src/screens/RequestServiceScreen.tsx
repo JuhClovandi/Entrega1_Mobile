@@ -1,7 +1,71 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  StyleSheet, 
+  SafeAreaView, 
+  Image, 
+  Alert, 
+  ActivityIndicator 
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// Importa a URL unificada do arquivo de configuração
+import { API_URL } from '../config'; 
 
 export default function RequestServiceScreen({ navigation }: any) {
+  // Estados para capturar os dados do formulário
+  const [descricao, setDescricao] = useState('');
+  const [dataServico, setDataServico] = useState('');
+  const [horario, setHorario] = useState('');
+  const [localizacao, setLocalizacao] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRequestService = async () => {
+    if (!descricao || !dataServico || !horario || !localizacao) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = await AsyncStorage.getItem('@token_usuario');
+
+      // fetch configurado usando exclusivamente a constante do ngrok/localtunnel
+      const response = await fetch(`${API_URL}/api/servicos/solicitar`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          descricao, 
+          data: dataServico, 
+          horario, 
+          localizacao 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Sucesso", "Orçamento solicitado com sucesso!");
+        // Redireciona para o Chat após a criação bem-sucedida
+        navigation.navigate('Main', { screen: 'Chat' });
+      } else {
+        Alert.alert("Erro", data.message || "Não foi possível enviar a solicitação.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -35,6 +99,8 @@ export default function RequestServiceScreen({ navigation }: any) {
           multiline
           placeholder="Descreva com detalhes o serviço que você precisa..."
           placeholderTextColor="#6E7681"
+          value={descricao}
+          onChangeText={setDescricao}
         />
 
         <Text style={styles.label}>Anexo de mídia:</Text>
@@ -47,6 +113,8 @@ export default function RequestServiceScreen({ navigation }: any) {
               style={styles.inputSmall}
               placeholder="00/00/0000"
               placeholderTextColor="#6E7681"
+              value={dataServico}
+              onChangeText={setDataServico}
             />
           </View>
           <View style={styles.halfWidth}>
@@ -55,6 +123,8 @@ export default function RequestServiceScreen({ navigation }: any) {
               style={styles.inputSmall}
               placeholder="00:00"
               placeholderTextColor="#6E7681"
+              value={horario}
+              onChangeText={setHorario}
             />
           </View>
         </View>
@@ -63,16 +133,21 @@ export default function RequestServiceScreen({ navigation }: any) {
         <TextInput
           style={[styles.input, styles.locationBox]}
           multiline
+          placeholder="Rua, número, bairro..."
           placeholderTextColor="#6E7681"
+          value={localizacao}
+          onChangeText={setLocalizacao}
         />
 
         <Text style={styles.termsText}>Ao enviar, você concorda com os Termos de Uso</Text>
+        
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Main', { screen: 'Chat' })}
+          onPress={handleRequestService}
           activeOpacity={0.8}
+          disabled={loading}
         >
-          <Text style={styles.buttonText}>Solicitar Orçamento</Text>
+          {loading ? <ActivityIndicator color="#333" /> : <Text style={styles.buttonText}>Solicitar Orçamento</Text>}
         </TouchableOpacity>
       </ScrollView>
 
@@ -102,7 +177,7 @@ export default function RequestServiceScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   header: {
-    flexDirection: 'row',
+    flexDirection: 'row', // 🔑 CORRIGIDO: De flex: 'row' para flexDirection: 'row'
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingTop: 8,
@@ -162,7 +237,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#A0A4AB',
     borderRadius: 24,
     height: 44,
-    justifyContent: 'center',
+    justifyContent: 'center', // 🔑 CORRIGIDO: De justify para justifyContent
     alignItems: 'center',
     marginBottom: 12,
   },

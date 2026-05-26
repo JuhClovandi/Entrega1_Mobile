@@ -8,42 +8,63 @@ export default function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos.");
+    if (!email.trim() || !senha) {
+      Alert.alert("Campos Obrigatórios", "Por favor, preencha o e-mail e a senha.");
       return;
     }
 
-    setLoading(true);
-
     try {
-      // 🔗 Conecta com o seu IP do backend na porta 3000
-      const response = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+      setLoading(true); 
+
+      const response = await fetch('https://predict-survey-shopping.ngrok-free.dev/api/login', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true' 
+        },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), senha: senha })
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.log("Resposta inválida do servidor:", responseText);
+        Alert.alert("Erro no Servidor", "Ocorreu um problema de comunicação com o backend.");
+        setLoading(false);
+        return;
+      }
 
       if (response.ok) {
-        // 💾 SALVA O TOKEN E O PERFIL (usuario ou prestador) NO DISPOSITIVO
-        await AsyncStorage.setItem('@token_usuario', data.token);
+        // 💾 Gravando os dados da sessão com segurança no aparelho
+        await AsyncStorage.setItem('@token_jwt', data.token);
+        await AsyncStorage.setItem('@nome_usuario', data.nome);
+        await AsyncStorage.setItem('@email_usuario', data.email);
         await AsyncStorage.setItem('@perfil_usuario', data.perfil);
+        await AsyncStorage.setItem('@categoria_usuario', data.categoria || '');
+        await AsyncStorage.setItem('@user_id', String(data.id));
 
-        Alert.alert("Sucesso", "Login realizado!");
+        navigation.navigate('Main');
 
-        // 🔀 AJUSTADO: Aponta para 'Main' para carregar o Navigator de Abas (Tabs) do seu App.tsx
-        if (data.perfil === 'prestador') {
-          navigation.navigate('Main'); 
-        } else {
-          navigation.navigate('Main'); 
-        }
+        Alert.alert("Sucesso", `Bem-vindo, ${data.nome}!`, [
+          { 
+            text: "OK", 
+            onPress: () => {
+              // 🚀 Redireciona para o navigator de abas ('Main'), onde está a HomeScreen
+              navigation.navigate('Main');
+            } 
+          }
+        ]);
+        
       } else {
-        Alert.alert("Erro de Login", data.message || "E-mail ou senha incorretos.");
+        Alert.alert("Acesso Negado", data.message || "E-mail ou senha incorretos.");
       }
+
     } catch (error) {
-      console.error(error);
-      Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
+      console.error("Erro na requisição de login:", error);
+      Alert.alert("Erro de Rede", "Não foi possível conectar ao backend. Verifique se o ngrok está online.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +96,6 @@ export default function LoginScreen({ navigation }: any) {
         {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Entrar</Text>}
       </TouchableOpacity>
 
-      {/* Navega de volta para a RoleScreen caso o usuário mude de ideia e queira criar conta */}
       <TouchableOpacity onPress={() => navigation.navigate('RoleScreen')}>
         <Text style={styles.linkText}>Não tem conta? Cadastre-se</Text>
       </TouchableOpacity>

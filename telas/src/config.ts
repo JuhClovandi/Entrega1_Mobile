@@ -1,0 +1,1 @@
+export const API_URL = 'https://predict-survey-shopping.ngrok-free.dev';

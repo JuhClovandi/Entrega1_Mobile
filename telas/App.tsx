@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import CreateProServiceScreen from './src/screens/CreateProServiceScreen';
+import ServiceDetailScreen from './src/screens/ServiceDetailScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import RoleScreen from './src/screens/RoleScreen';
 import RegisterScreen from './src/screens/RegisterScreen'; 
@@ -18,7 +19,6 @@ import ChatDetailScreen from './src/screens/ChatDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import RequestServiceScreen from './src/screens/RequestServiceScreen';
-
 import LoginScreen from './src/screens/LoginScreen'; 
 
 const Stack = createNativeStackNavigator();
@@ -37,68 +37,35 @@ function MainTabs() {
         tabBarIconStyle: { marginTop: 6 },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>🏠</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="Serviços"
-        component={ListingScreen}
-        options={{
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>🗓️</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="Histórico"
-        component={HistoryScreen}
-        options={{
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>📋</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="Chat"
-        component={ChatScreen}
-        options={{
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>💬</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="Perfil"
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>👤</Text>,
-        }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>🏠</Text> }} />
+      <Tab.Screen name="Serviços" component={ListingScreen} options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>🗓️</Text> }} />
+      <Tab.Screen name="Histórico" component={HistoryScreen} options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>📋</Text> }} />
+      <Tab.Screen name="Chat" component={ChatScreen} options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>💬</Text> }} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>👤</Text> }} />
     </Tab.Navigator>
   );
 }
 
-// Navegador Principal em Pilha (Stack)
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        
-        {/* Fluxo Inicial de Telas Soltas */}
         <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        
-        {/* 🔑 ADICIONADO: Cadastrando a tela de Login no GPS do aplicativo */}
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="CreateProService" component={CreateProServiceScreen} />
+        
+        {/* 2. REGISTRO: Adicione a tela ServiceDetail aqui */}
+        <Stack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
+        
         <Stack.Screen name="RoleScreen" component={RoleScreen} />
         <Stack.Screen name="RegisterClient" component={RegisterScreen} /> 
         <Stack.Screen name="RegisterPro" component={RegisterProScreen} /> 
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         
-        {/* Telas internas e sub-fluxos */}
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="RequestService" component={RequestServiceScreen} />
         <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-        
       </Stack.Navigator>
     </NavigationContainer>
   );
