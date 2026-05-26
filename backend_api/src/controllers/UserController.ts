@@ -113,43 +113,44 @@ export const UserController = {
 
   // 3. Login Centralizado
   async login(req: Request, res: Response) {
-    try {
-      console.log("--> REQUISIÇÃO DE LOGIN RECEBIDA!");
-      const { email, senha } = req.body;
-      
-      if (!email || !senha) {
-        return res.status(400).json({ message: "E-mail e senha são obrigatórios." });
-      }
-
-      const emailBusca = String(email).trim().toLowerCase();
-      const user = db.select().from(usuarios).where(eq(usuarios.email, emailBusca)).get();
-
-      if (user && await bcrypt.compare(senha, user.senha)) {
-        const token = jwt.sign(
-          { id: user.id, perfil: user.perfil }, 
-          SECRET, 
-          { expiresIn: '1h' }
-        );
-        
-        console.log("✅ Login realizado com sucesso para:", emailBusca);
-
-        return res.json({ 
-          token, 
-          perfil: user.perfil,
-          nome: user.nome,
-          email: user.email,
-          categoria: user.categoria || ''
-        });
-      }
-      
-      console.log("⚠️ Credenciais inválidas para:", emailBusca);
-      return res.status(401).json({ message: "E-mail ou senha incorretos." });
-
-    } catch (error: any) {
-      console.error("❌ ERRO CRÍTICO NO MÉTODO DE LOGIN:", error);
-      return res.status(500).json({ message: "Erro interno no servidor ao tentar fazer login." });
+  try {
+    console.log("--> REQUISIÇÃO DE LOGIN RECEBIDA!");
+    const { email, senha } = req.body;
+    
+    if (!email || !senha) {
+      return res.status(400).json({ message: "E-mail e senha são obrigatórios." });
     }
-  },
+
+    const emailBusca = String(email).trim().toLowerCase();
+    const user = db.select().from(usuarios).where(eq(usuarios.email, emailBusca)).get();
+
+    if (user && await bcrypt.compare(senha, user.senha)) {
+      const token = jwt.sign(
+        { id: user.id, perfil: user.perfil }, 
+        SECRET, 
+        { expiresIn: '1h' }
+      );
+      
+      console.log("✅ Login realizado com sucesso para:", emailBusca);
+
+      return res.json({ 
+        token, 
+        id: user.id,              // ← ADICIONAR ESTA LINHA
+        perfil: user.perfil,
+        nome: user.nome,
+        email: user.email,
+        categoria: user.categoria || ''
+      });
+    }
+    
+    console.log("⚠️ Credenciais inválidas para:", emailBusca);
+    return res.status(401).json({ message: "E-mail ou senha incorretos." });
+
+  } catch (error: any) {
+    console.error("❌ ERRO CRÍTICO NO MÉTODO DE LOGIN:", error);
+    return res.status(500).json({ message: "Erro interno no servidor ao tentar fazer login." });
+  }
+},
 
   // 4. Excluir Conta
   async deleteUser(req: Request, res: Response) {

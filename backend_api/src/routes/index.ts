@@ -9,7 +9,7 @@ router.post('/register/pro', UserController.registerPro);
 router.post('/login', UserController.login);
 router.post('/profissional/servicos', ServiceController.createService);
 router.get('/profissional/servicos', ServiceController.listProServices);
-router.post('/user/delete', UserController.deleteUser);
+router.delete('/api/usuarios/:id', UserController.deleteUser);
 router.delete('/profissional/servicos/:id', ServiceController.deleteService);
 
 export default router;

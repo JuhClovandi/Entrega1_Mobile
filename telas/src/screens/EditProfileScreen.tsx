@@ -25,13 +25,14 @@ export default function EditProfileScreen({ navigation }: any) {
   useEffect(() => {
     const loadCurrentData = async () => {
       try {
-        const storedName = await AsyncStorage.getItem('@nome_usuario');
-        const storedBio = await AsyncStorage.getItem('@biografia_usuario');
-        const storedCategory = await AsyncStorage.getItem('@categoria_usuario');
+        // Ajustado para usar as MESMAS chaves do ProfileScreen e do Login
+        const storedName = await AsyncStorage.getItem('nome');
+        const storedBio = await AsyncStorage.getItem('biografia');
+        const storedCategory = await AsyncStorage.getItem('categoria');
         
-        const f1 = await AsyncStorage.getItem('@foto1');
-        const f2 = await AsyncStorage.getItem('@foto2');
-        const f3 = await AsyncStorage.getItem('@foto3');
+        const f1 = await AsyncStorage.getItem('foto1');
+        const f2 = await AsyncStorage.getItem('foto2');
+        const f3 = await AsyncStorage.getItem('foto3');
 
         if (storedName) setNome(storedName);
         if (storedBio) setBiografia(storedBio);
@@ -77,16 +78,27 @@ export default function EditProfileScreen({ navigation }: any) {
     }
 
     try {
-      await AsyncStorage.setItem('@nome_usuario', nome);
-      await AsyncStorage.setItem('@biografia_usuario', biografia);
-      await AsyncStorage.setItem('@categoria_usuario', categoria);
+      // Ajustado para usar as MESMAS chaves do ProfileScreen
+      await AsyncStorage.setItem('nome', nome);
+      await AsyncStorage.setItem('biografia', biografia);
+      await AsyncStorage.setItem('categoria', categoria);
       
-      if (foto1) await AsyncStorage.setItem('@foto1', foto1);
-      if (foto2) await AsyncStorage.setItem('@foto2', foto2);
-      if (foto3) await AsyncStorage.setItem('@foto3', foto3);
+      if (foto1) await AsyncStorage.setItem('foto1', foto1);
+      if (foto2) await AsyncStorage.setItem('foto2', foto2);
+      if (foto3) await AsyncStorage.setItem('foto3', foto3);
 
-      Alert.alert("Sucesso", "Perfil updated com sucesso!");
-      navigation.goBack();
+      // Colocando o goBack DENTRO do botão de OK do Alerta
+      Alert.alert(
+        "Sucesso", 
+        "Perfil atualizado com sucesso!",
+        [
+          { 
+            text: "OK", 
+            onPress: () => navigation.goBack() 
+          }
+        ]
+      );
+      
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
       Alert.alert("Erro", "Não foi possível salvar as alterações.");
