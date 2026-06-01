@@ -30,3 +30,11 @@ export const servicos = sqliteTable('servicos', {
   descricao: text('descricao').notNull(),
   prestadorId: integer('prestador_id').references(() => usuarios.id) 
 });
+
+export const agendamentos = sqliteTable('agendamentos', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  servicoId: integer('servico_id').references(() => servicos.id).notNull(),
+  clienteId: integer('cliente_id').references(() => usuarios.id).notNull(),
+  horario: text('horario').notNull(),
+  status: text('status').default('agendado').notNull()
+});

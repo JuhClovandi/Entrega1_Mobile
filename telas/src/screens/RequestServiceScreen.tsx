@@ -12,7 +12,6 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Importa a URL unificada do arquivo de configuração
 import { API_URL } from '../config'; 
 
 export default function RequestServiceScreen({ navigation }: any) {
@@ -34,7 +33,6 @@ export default function RequestServiceScreen({ navigation }: any) {
     try {
       const token = await AsyncStorage.getItem('@token_usuario');
 
-      // fetch configurado usando exclusivamente a constante do ngrok/localtunnel
       const response = await fetch(`${API_URL}/api/servicos/solicitar`, {
         method: "POST",
         headers: { 
@@ -53,7 +51,6 @@ export default function RequestServiceScreen({ navigation }: any) {
 
       if (response.ok) {
         Alert.alert("Sucesso", "Orçamento solicitado com sucesso!");
-        // Redireciona para o Chat após a criação bem-sucedida
         navigation.navigate('Main', { screen: 'Chat' });
       } else {
         Alert.alert("Erro", data.message || "Não foi possível enviar a solicitação.");
@@ -177,7 +174,7 @@ export default function RequestServiceScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   header: {
-    flexDirection: 'row', // 🔑 CORRIGIDO: De flex: 'row' para flexDirection: 'row'
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingTop: 8,
