@@ -1,14 +1,13 @@
 import { Request, Response } from 'express';
 import { db } from '../db';
-import { servicos } from '../db/schema';
+import { servicos, agendamentos } from '../db/schema'; // ✅ Incluído agendamentos no import para cascata
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
-// 🔑 AGORA IGUAL AO SEU AUTHMIDDLEWARE: Se não houver JWT_SECRET no .env, usa "123"
 const SECRET = process.env.JWT_SECRET || '123';
 
 export const ServiceController = {
-  // Criar Serviço (Apenas Prestador)
+  // 1. Criar / Catalogar Serviço
   async createService(req: Request, res: Response) {
     try {
       const { nome, preco, tempo_estimado, descricao } = req.body;
@@ -20,7 +19,6 @@ export const ServiceController = {
 
       const token = authHeader.split(' ')[1];
       
-      // 🔒 Validação usando a chave correta ("123")
       let decoded: { id: number, perfil: string };
       try {
         decoded = jwt.verify(token, SECRET) as { id: number, perfil: string };
@@ -51,23 +49,42 @@ export const ServiceController = {
     }
   },
 
-  // Deletar Serviço (Apenas Prestador)
+  // 2. Excluir Serviço - Totalmente Protegido contra Erros de Chave Estrangeira
   async deleteService(req: Request, res: Response) {
     try {
       const { id } = req.params; 
-      
-      await db.delete(servicos)
-        .where(eq(servicos.id, Number(id)))
+      if (!id) return res.status(400).json({ message: "ID do serviço não fornecido." });
+
+      const serviceId = Number(id);
+      console.log(`--> 🔴 INICIANDO REMOÇÃO EM CASCATA PARA O SERVIÇO ID: ${serviceId}`);
+
+      // PASSO 1: Deleta todos os agendamentos vinculados a este serviço primeiro
+      await db.delete(agendamentos)
+        .where(eq(agendamentos.servicoId, serviceId))
         .run();
+      console.log("--> 🟢 Agendamentos vinculados ao serviço limpos com sucesso.");
+
+      // PASSO 2: Deleta o serviço definitivo da tabela
+      const result = await db.delete(servicos)
+        .where(eq(servicos.id, serviceId))
+        .run();
+      console.log(`--> 🔴 Remoção do serviço concluída. Linhas afetadas: ${result.changes}`);
+
+      if (result.changes === 0) {
+        return res.status(404).json({ message: "Serviço não encontrado." });
+      }
       
       return res.json({ message: "Serviço excluído com sucesso!" });
-    } catch (error) {
-      console.error("ERRO NO DELETE:", error);
-      return res.status(500).json({ message: "Erro interno no servidor." });
+    } catch (error: any) {
+      console.error("❌ ERRO NO DELETE DE SERVIÇO:", error);
+      return res.status(500).json({ 
+        message: "Erro interno no servidor ao tentar excluir o serviço.",
+        error: error.message 
+      });
     }
   },
 
-  // Listar Serviços (Aberto para Clientes e Prestadores)
+  // 3. Listar Serviços (Filtro por Prestador ou Geral)
   async listAllServices(req: Request, res: Response) {
     try {
       const authHeader = req.headers.authorization;
@@ -75,7 +92,6 @@ export const ServiceController = {
 
       const token = authHeader.split(' ')[1];
       
-      // 🔒 Validação usando a chave correta ("123")
       let decoded: { id: number, perfil: string };
       try {
         decoded = jwt.verify(token, SECRET) as { id: number, perfil: string };
@@ -83,7 +99,6 @@ export const ServiceController = {
         return res.status(401).json({ message: "Sessão expirada ou Token inválido. Faça login novamente." });
       }
 
-      // Se for PRESTADOR, traz apenas os serviços criados por ele
       if (decoded.perfil === 'prestador') {
         const meusServicos = await db.select()
           .from(servicos)
@@ -91,7 +106,6 @@ export const ServiceController = {
         return res.json(meusServicos);
       }
 
-      // Se for CLIENTE, traz TODOS os serviços cadastrados no sistema para ele contratar
       const todosOsServicos = await db.select().from(servicos);
       return res.json(todosOsServicos);
 

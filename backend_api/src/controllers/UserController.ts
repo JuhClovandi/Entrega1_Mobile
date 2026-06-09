@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../db';
-import { usuarios, servicos } from '../db/schema';
+import { usuarios, servicos, agendamentos } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -61,6 +61,7 @@ export const UserController = {
     }
   },
 
+  // 2. Cadastro de Profissional / Prestador
   async registerPro(req: Request, res: Response) {
     const { nome, email, senha, categoria, regiao } = req.body;
     
@@ -113,66 +114,92 @@ export const UserController = {
 
   // 3. Login Centralizado
   async login(req: Request, res: Response) {
-  try {
-    console.log("--> REQUISIÇÃO DE LOGIN RECEBIDA!");
-    const { email, senha } = req.body;
-    
-    if (!email || !senha) {
-      return res.status(400).json({ message: "E-mail e senha são obrigatórios." });
-    }
-
-    const emailBusca = String(email).trim().toLowerCase();
-    const user = db.select().from(usuarios).where(eq(usuarios.email, emailBusca)).get();
-
-    if (user && await bcrypt.compare(senha, user.senha)) {
-      const token = jwt.sign(
-        { id: user.id, perfil: user.perfil }, 
-        SECRET, 
-        { expiresIn: '1h' }
-      );
+    try {
+      console.log("--> REQUISIÇÃO DE LOGIN RECEBIDA!");
+      const { email, senha } = req.body;
       
-      console.log("✅ Login realizado com sucesso para:", emailBusca);
+      if (!email || !senha) {
+        return res.status(400).json({ message: "E-mail e senha são obrigatórios." });
+      }
 
-      return res.json({ 
-        token, 
-        id: user.id,              // ← ADICIONAR ESTA LINHA
-        perfil: user.perfil,
-        nome: user.nome,
-        email: user.email,
-        categoria: user.categoria || ''
+      const emailBusca = String(email).trim().toLowerCase();
+      const user = db.select().from(usuarios).where(eq(usuarios.email, emailBusca)).get();
+
+      if (user && await bcrypt.compare(senha, user.senha)) {
+        const token = jwt.sign(
+          { id: user.id, perfil: user.perfil }, 
+          SECRET, 
+          { expiresIn: '1h' }
+        );
+        
+        console.log("✅ Login realizado com sucesso para:", emailBusca);
+
+        return res.json({ 
+          token, 
+          id: user.id,
+          perfil: user.perfil,
+          nome: user.nome,
+          email: user.email,
+          categoria: user.categoria || ''
+        });
+      }
+      
+      console.log("⚠️ Credenciais inválidas para:", emailBusca);
+      return res.status(401).json({ message: "E-mail ou senha incorretos." });
+
+    } catch (error: any) {
+      console.error("❌ ERRO CRÍTICO NO MÉTODO DE LOGIN:", error);
+      return res.status(500).json({ message: "Erro interno no servidor ao tentar fazer login." });
+    }
+  },
+
+  async deleteUser(req: Request, res: Response) {
+    try {
+      const { id } = req.body;
+      if (!id) return res.status(400).json({ message: "ID não fornecido" });
+
+      const userId = Number(id);
+      console.log(`--> 🔴 INICIANDO CASCADE MANUAL PARA O USUÁRIO ID: ${userId}`);
+
+      await db.delete(agendamentos).where(eq(agendamentos.clienteId, userId)).run();
+      console.log("--> 🟢 Agendamentos como cliente removidos.");
+
+      const servicosDoPrestador = db.select({ id: servicos.id })
+        .from(servicos)
+        .where(eq(servicos.prestadorId, userId))
+        .all();
+
+      const idsServicos = servicosDoPrestador.map(s => s.id);
+
+      if (idsServicos.length > 0) {
+        for (const servicoId of idsServicos) {
+          await db.delete(agendamentos).where(eq(agendamentos.servicoId, servicoId)).run();
+        }
+        console.log("--> 🟢 Agendamentos vinculados aos serviços do prestador removidos.");
+      }
+
+      await db.delete(servicos).where(eq(servicos.prestadorId, userId)).run();
+      console.log("--> 🟢 Serviços do prestador limpos.");
+
+      const result = await db.delete(usuarios).where(eq(usuarios.id, userId)).run();
+      console.log(`--> 🟢 Remoção concluída com sucesso. Linhas alteradas: ${result.changes}`);
+
+      if (result.changes === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado." });
+      }
+
+      return res.json({ message: "Conta excluída com sucesso" });
+
+    } catch (error: any) {
+      console.error("❌ ERRO INTERNO DO SQLITE NO PROCESSO DE EXCLUSÃO:", error);
+      return res.status(500).json({ 
+        message: "Erro no servidor", 
+        error: error.message 
       });
     }
-    
-    console.log("⚠️ Credenciais inválidas para:", emailBusca);
-    return res.status(401).json({ message: "E-mail ou senha incorretos." });
+  },
 
-  } catch (error: any) {
-    console.error("❌ ERRO CRÍTICO NO MÉTODO DE LOGIN:", error);
-    return res.status(500).json({ message: "Erro interno no servidor ao tentar fazer login." });
-  }
-},
-
-  // 4. Excluir Conta
-  async deleteUser(req: Request, res: Response) {
-  try {
-    const { id } = req.body;
-    if (!id) return res.status(400).json({ message: "ID não fornecido" });
-
-    // 1. Deleta serviços vinculados primeiro
-    await db.delete(servicos).where(eq(servicos.prestadorId, Number(id))).run();
-    
-    // 2. Deleta o usuário
-    const result = await db.delete(usuarios).where(eq(usuarios.id, Number(id))).run();
-
-    if (result.changes === 0) return res.status(404).json({ message: "Usuário não encontrado" });
-
-    return res.json({ message: "Conta excluída com sucesso" });
-  } catch (error) {
-    console.error("ERRO NO DELETE:", error);
-    return res.status(500).json({ message: "Erro no servidor" });
-  }
-},
-
+  // 5. Atualizar Dados do Perfil
   async updateUser(req: Request, res: Response) {
     const { email, nome, categoria } = req.body;
 

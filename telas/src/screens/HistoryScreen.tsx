@@ -1,70 +1,137 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+import { API_URL } from '../config';
 
 export default function HistoryScreen() {
-  const [historico, setHistorico] = useState([
-    'Configuração de PC',
-    'Limpeza',
-    'Restauração',
-    'Upgrade',
-    'Montagem',
-    'Tecnologia',
-    'Baixar programas',
-    'Instalação de cooler',
-  ]);
+  const [historico, setHistorico] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const isFocused = useIsFocused();
 
-  const handleClearHistory = () => {
-    if (historico.length === 0) return;
+  useEffect(() => {
+    if (isFocused) {
+      loadHistory();
+    }
+  }, [isFocused]);
 
+  const loadHistory = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('@token_jwt');
+      
+      const response = await fetch(`${API_URL}/api/profissional/servicos`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true"
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHistorico(data);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar histórico do banco:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelarAgendamento = async (agendamentoId: number) => {
     Alert.alert(
-      "Limpar Histórico",
-      "Tem certeza que deseja apagar todo o seu histórico de pedidos? Essa ação não pode ser desfeita.",
+      "Cancelar Agendamento",
+      "Tem certeza que deseja cancelar este serviço agendado?",
       [
-        { text: "Cancelar", style: "cancel" },
+        { text: "Voltar", style: "cancel" },
         {
-          text: "Sim, Limpar",
+          text: "Sim, Cancelar",
           style: "destructive",
-          onPress: () => setHistorico([])
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('@token_jwt');
+              const response = await fetch(`${API_URL}/api/servicos/agendar/${agendamentoId}`, {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "ngrok-skip-browser-warning": "true"
+                }
+              });
+
+              if (response.ok) {
+                Alert.alert("Cancelado 🎉", "O agendamento foi removido com sucesso.");
+                loadHistory(); // Dá um reload na tela automaticamente
+              } else {
+                Alert.alert("Erro", "Não foi possível cancelar o agendamento no servidor.");
+              }
+            } catch (error) {
+              console.error("Erro na requisição de cancelamento:", error);
+              Alert.alert("Erro de Conexão", "Falha ao conectar com o backend.");
+            }
+          }
         }
       ]
     );
   };
 
+  const filteredHistory = historico.filter((item: any) => 
+    (item.nome || `Serviço #${item.id}`).toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TextInput style={styles.searchInput} placeholder="Pesquisar pedidos anteriores" />
+        <TextInput 
+          style={styles.searchInput} 
+          placeholder="Pesquisar agendamentos anteriores" 
+          value={search}
+          onChangeText={setSearch}
+        />
         
-        {/* Linha dos Filtros + Botão de Limpar */}
+        {/* Linha dos Filtros */}
         <View style={styles.actionRow}>
           <View style={styles.filters}>
             <Text style={styles.filterChip}>← Mais Antigos</Text>
             <Text style={styles.filterChip}>Mais Recentes →</Text>
           </View>
-          
-          <TouchableOpacity onPress={handleClearHistory} disabled={historico.length === 0}>
-            <Text style={[styles.clearButtonText, historico.length === 0 && styles.disabledText]}>
-              Limpar
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={historico.length > 0 ? styles.grid : styles.emptyContainer}>
-        {historico.length > 0 ? (
-          historico.map((title, index) => (
-            <View key={`${title}-${index}`} style={styles.historyCard}>
-              <Text style={styles.icon}>💻</Text>
-              <Text style={styles.cardText}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#333" style={{ flex: 1 }} />
+      ) : (
+        <ScrollView contentContainerStyle={filteredHistory.length > 0 ? styles.grid : styles.emptyContainer}>
+          {filteredHistory.length > 0 ? (
+            filteredHistory.map((item: any) => (
+              <View key={String(item.id)} style={styles.historyCard}>
+                {}
+                <TouchableOpacity 
+                  style={styles.closeCardButton} 
+                  onPress={() => handleCancelarAgendamento(item.id)}
+                >
+                  <Text style={styles.closeCardText}>❌</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.icon}>💻</Text>
+                <Text style={styles.cardText}>{item.nome || `Serviço #${item.id}`}</Text>
+                {item.horario && <Text style={styles.cardTime}>{item.horario}</Text>}
+                {item.status && (
+                  <Text style={[styles.cardStatus, item.status === 'agendado' && styles.statusActive]}>
+                    {item.status.toUpperCase()}
+                  </Text>
+                )}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyView}>
+              <Text style={styles.emptyText}>Nenhum agendamento encontrado.</Text>
             </View>
-          ))
-        ) : (
-          <View style={styles.emptyView}>
-            <Text style={styles.emptyText}>Seu histórico está vazio.</Text>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -77,15 +144,19 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   filters: { flexDirection: 'row', gap: 10 }, 
   filterChip: { backgroundColor: '#ccc', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 15, fontSize: 12 },
-  
-  clearButtonText: { color: '#FF3B30', fontWeight: 'bold', fontSize: 14 },
-  disabledText: { color: '#ccc' }, 
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 15, justifyContent: 'space-between' },
-  historyCard: { width: '48%', backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 20, alignItems: 'center', marginBottom: 15 },
-  icon: { fontSize: 30, marginBottom: 10 },
-  cardText: { fontSize: 12, textAlign: 'center', fontWeight: '500', color: '#333' },
+  historyCard: { width: '48%', backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 20, alignItems: 'center', marginBottom: 15, position: 'relative' },
   
+  closeCardButton: { position: 'absolute', top: 8, right: 8, padding: 4 },
+  closeCardText: { fontSize: 10 },
+
+  icon: { fontSize: 30, marginBottom: 10 },
+  cardText: { fontSize: 12, textAlign: 'center', fontWeight: '500', color: '#333', marginBottom: 4 },
+  cardTime: { fontSize: 11, color: '#666', marginBottom: 4 },
+  cardStatus: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' },
+  statusActive: { color: '#22C55E' },
+
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyView: { alignItems: 'center', marginTop: 50 },
   emptyText: { fontSize: 16, color: '#888', fontWeight: 'bold' }

@@ -13,5 +13,7 @@ router.post('/profissional/servicos', ServiceController.createService);
 router.get('/profissional/servicos', ServiceController.listAllServices);
 router.delete('/profissional/servicos/:id', ServiceController.deleteService);
 router.post('/servicos/agendar', BookingController.createBooking);
+router.get('/servicos/agendados', BookingController.listMyBookings);
+router.delete('/servicos/agendar/:id', BookingController.cancelBooking);
 
 export default router;

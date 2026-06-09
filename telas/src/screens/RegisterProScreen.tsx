@@ -14,6 +14,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context'; 
 import { API_URL } from "../config"; 
 
+const CATEGORIAS_OFICIAIS = [
+  { id: 'limpeza', label: 'Limpeza 🧹' },
+  { id: 'manutencao', label: 'Manutenção 🛠️' },
+  { id: 'tecnologia', label: 'Tecnologia 💻' },
+  { id: 'ensino', label: 'Ensino 📚' },
+  { id: 'saude', label: 'Saúde 🩺' }
+];
+
 export default function RegisterProScreen({ navigation }: any) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -23,8 +31,8 @@ export default function RegisterProScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
 
   const handleRegisterPro = async () => {
-    if (!nome.trim() || !email.trim() || !categoria.trim() || !regiao.trim() || !senha) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos.");
+    if (!nome.trim() || !email.trim() || !categoria || !regiao.trim() || !senha) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos e selecione sua categoria de atuação.");
       return;
     }
 
@@ -40,7 +48,7 @@ export default function RegisterProScreen({ navigation }: any) {
         body: JSON.stringify({
           nome: nome.trim(),
           email: email.trim().toLowerCase(),
-          categoria: categoria.trim(),
+          categoria: categoria,
           regiao: regiao.trim(),
           senha: senha,
         }),
@@ -63,6 +71,7 @@ export default function RegisterProScreen({ navigation }: any) {
         await AsyncStorage.setItem('@nome_usuario', data.nome || nome);
         await AsyncStorage.setItem('@email_usuario', data.email || email.trim().toLowerCase()); 
         await AsyncStorage.setItem('@perfil_usuario', 'prestador');
+        await AsyncStorage.setItem('@user_type', 'prestador');
         await AsyncStorage.setItem('@categoria_usuario', data.categoria || categoria);
 
         Alert.alert("Sucesso", "Conta profissional criada com sucesso!", [
@@ -89,7 +98,7 @@ export default function RegisterProScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Image source={require('../../assets/images/Logo.png')} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.title}>Criar Conta</Text>
+          <Text style={styles.title}>Criar Conta Profissional</Text>
         </View>
 
         <View style={styles.form}>
@@ -105,11 +114,28 @@ export default function RegisterProScreen({ navigation }: any) {
             onChangeText={setEmail}
           />
 
-          <Text style={styles.label}>Categoria de Serviço:</Text>
-          <TextInput style={styles.input} value={categoria} onChangeText={setCategoria} />
+          {}
+          <Text style={styles.label}>Sua Categoria Principal: *</Text>
+          <View style={styles.categoriesContainer}>
+            {CATEGORIAS_OFICIAIS.map((cat) => {
+              const isSelected = categoria === cat.id;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                  onPress={() => setCategoria(cat.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-          <Text style={styles.label}>Região:</Text>
-          <TextInput style={styles.input} value={regiao} onChangeText={setRegiao} />
+          <Text style={styles.label}>Região de Atendimento:</Text>
+          <TextInput style={styles.input} placeholder="Ex: Águas Lindas, Ceilândia" placeholderTextColor="#555" value={regiao} onChangeText={setRegiao} />
 
           <Text style={styles.label}>Senha:</Text>
           <TextInput style={styles.input} secureTextEntry value={senha} onChangeText={setSenha} />
@@ -127,14 +153,22 @@ export default function RegisterProScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FAFAFA" },
-  scrollContent: { flexGrow: 1, justifyContent: "space-between", paddingVertical: 40 },
-  header: { alignItems: "center", marginBottom: 20 },
-  logoImage: { width: 276, height: 96, marginBottom: 6 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#000", marginTop: 10 },
-  form: { width: "100%", paddingHorizontal: 40 },
-  label: { fontSize: 14, color: "#666", marginBottom: 5, marginLeft: 5 },
+  scrollContent: { flexGrow: 1, justifyContent: "space-between", paddingVertical: 20 },
+  header: { alignItems: "center", marginBottom: 10 },
+  logoImage: { width: 200, height: 80, marginBottom: 6 },
+  title: { fontSize: 22, fontWeight: "bold", color: "#000", marginTop: 5 },
+  form: { width: "100%", paddingHorizontal: 30 },
+  label: { fontSize: 14, fontWeight: "600", color: "#444", marginBottom: 6, marginLeft: 5 },
   input: { backgroundColor: "#A0A4AB", borderRadius: 25, height: 48, marginBottom: 15, paddingHorizontal: 15, color: "#222", fontSize: 15 },
-  button: { backgroundColor: "#A0A4AB", borderRadius: 25, height: 50, justifyContent: "center", alignItems: "center", marginTop: 20 },
+  
+  // Estilo dos Chips de Categoria
+  categoriesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15, paddingHorizontal: 5 },
+  categoryChip: { backgroundColor: '#E0E4EC', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#BBB' },
+  categoryChipSelected: { backgroundColor: '#222', borderColor: '#222' },
+  categoryText: { color: '#333', fontSize: 13, fontWeight: '500' },
+  categoryTextSelected: { color: '#FFF', fontWeight: 'bold' },
+
+  button: { backgroundColor: "#A0A4AB", borderRadius: 25, height: 50, justifyContent: "center", alignItems: "center", marginTop: 15 },
   buttonText: { color: '#333', fontSize: 16, fontWeight: 'bold' },
   footer: { fontSize: 11, color: "#222", textAlign: "center", marginTop: 20 },
 });

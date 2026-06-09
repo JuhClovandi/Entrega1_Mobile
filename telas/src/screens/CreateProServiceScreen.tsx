@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from '../config'; 
+import { API_URL } from '../config';
+
+const CATEGORIAS = [
+  { id: 'limpeza', label: 'Limpeza 🧹' },
+  { id: 'manutencao', label: 'Manutenção 🛠️' },
+  { id: 'tecnologia', label: 'Tecnologia 💻' },
+  { id: 'ensino', label: 'Ensino 📚' },
+  { id: 'saude', label: 'Saúde 🩺' }
+];
 
 export default function CreateProServiceScreen({ navigation }: any) {
   const [nomeServico, setNomeServico] = useState('');
   const [precoBase, setPrecoBase] = useState('');
   const [tempoEstimado, setTempoEstimado] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [categoria, setCategoria] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSaveService = async () => {
-    if (!nomeServico.trim() || !precoBase.trim() || !tempoEstimado.trim() || !descricao.trim()) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos para catalogar seu serviço.");
+    // 🔥 Validação incluindo a nova categoria
+    if (!nomeServico.trim() || !precoBase.trim() || !tempoEstimado.trim() || !descricao.trim() || !categoria) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos e selecione uma categoria.");
       return;
     }
 
@@ -39,7 +49,8 @@ export default function CreateProServiceScreen({ navigation }: any) {
           nome: nomeServico.trim(), 
           preco: precoConvertido, 
           tempo_estimado: tempoEstimado.trim(), 
-          descricao: descricao.trim()
+          descricao: descricao.trim(),
+          categoria: categoria
         }),
       });
 
@@ -64,17 +75,17 @@ export default function CreateProServiceScreen({ navigation }: any) {
           description: descricao.trim(),
           rating: '5.0', 
           distance: 'Preço: R$ ' + precoConvertido.toFixed(2), 
-          avatar: null
+          avatar: null,
+          categoria: categoria
         };
 
-        // Limpa o formulário antes de voltar
+        // Limpa o formulário
         setNomeServico('');
         setPrecoBase('');
         setTempoEstimado('');
         setDescricao('');
+        setCategoria('');
         
-        // 🚀 SOLUÇÃO BLINDADA: Em vez de adivinhar o nome da tela anterior, passamos os parâmetros
-        // para a rota que chamou esta tela usando navigate({ merge: true }) combinado com goBack()
         navigation.navigate({
           name: navigation.getState().routes[navigation.getState().index - 1]?.name, 
           params: { newProfessional },
@@ -97,10 +108,30 @@ export default function CreateProServiceScreen({ navigation }: any) {
       <Text style={styles.title}>Oferecer Novo Serviço</Text>
       <Text style={styles.subtitle}>Adicione serviços ao seu perfil para que os clientes possam te contratar</Text>
 
+      {/* 🔥 SEÇÃO DE SELEÇÃO DE CATEGORIAS */}
+      <Text style={styles.label}>Selecione a Categoria do Serviço</Text>
+      <View style={styles.categoriesContainer}>
+        {CATEGORIAS.map((cat) => {
+          const isSelected = categoria === cat.id;
+          return (
+            <TouchableOpacity
+              key={cat.id}
+              style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+              onPress={() => setCategoria(cat.id)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <Text style={styles.label}>Nome do Serviço</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ex: Vulcanização de Pneu, Alinhamento"
+        placeholder="Ex: Limpeza Residencial, Aula de Inglês"
         value={nomeServico}
         onChangeText={setNomeServico}
       />
@@ -153,7 +184,15 @@ const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: '#f5f5f5', flexGrow: 1, justifyContent: 'center' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#333', textAlign: 'center', marginTop: 10 },
   subtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 25, paddingHorizontal: 15 },
-  label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 5, marginLeft: 5 },
+  label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 8, marginLeft: 5 },
+  
+  // 🔥 Estilos dos seletores de categoria
+  categoriesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20, paddingHorizontal: 5 },
+  categoryChip: { backgroundColor: '#FFF', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: '#DDD' },
+  categoryChipSelected: { backgroundColor: '#333', borderColor: '#333' },
+  categoryText: { color: '#555', fontSize: 14, fontWeight: '500' },
+  categoryTextSelected: { color: '#FFF', fontWeight: 'bold' },
+
   input: { backgroundColor: '#FFF', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#DDD' },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 15 },
   column: { flex: 1 },
