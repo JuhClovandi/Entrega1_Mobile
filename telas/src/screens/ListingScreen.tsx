@@ -10,14 +10,13 @@ export default function ListingScreen({ navigation }: any) {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Busca os serviços no Backend
  const loadServices = async () => {
   try {
     setLoading(true);
     const token = await AsyncStorage.getItem('@token_jwt');
     
     const response = await fetch(`${API_URL}/api/profissional/servicos`, {
-      method: 'GET', // Garanta que o método seja GET
+      method: 'GET', 
       headers: { 
         'Authorization': `Bearer ${token}`,
         'ngrok-skip-browser-warning': 'true',
@@ -25,16 +24,14 @@ export default function ListingScreen({ navigation }: any) {
       }
     });
     
-    // VERIFICAÇÃO DE RESPOSTA
     if (!response.ok) {
-      // Se não for 200-299, lança um erro com o status
       throw new Error(`Erro ${response.status}: ${await response.text()}`);
     }
 
     const data = await response.json();
     setServices(data);
   } catch (error: any) {
-    console.error("DETALHE DO ERRO:", error); // ISSO VAI MOSTRAR O ERRO NO SEU TERMINAL
+    console.error("DETALHE DO ERRO:", error);
     Alert.alert("Erro de Conexão", `Não foi possível carregar: ${error.message}`);
   } finally {
     setLoading(false);

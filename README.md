@@ -128,3 +128,13 @@ O projeto conta com uma suíte de 13 testes automatizados que validam o "coraç�
 
 - Execute o comando: npm test.
 
+ - para funcionar 
+ 
+ -> novo terminal
+ -> ngrok http 3000
+ -> novo terminal
+ -> cd backend_api
+ -> npx tsx --env-file=.env src/server.ts
+ -> novo terminal
+ -> cd telas
+ -> npx expo start -c

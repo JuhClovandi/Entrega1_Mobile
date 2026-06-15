@@ -8,6 +8,8 @@ export const usuarios = sqliteTable('usuarios', {
   perfil: text('perfil').default('usuario').notNull(),
   categoria: text('categoria'),
   regiao: text('regiao'),
+  fotoPerfil: text('foto_perfil'),
+  biografia: text('biografia'),
 });
 
 export const servicos = sqliteTable('servicos', {

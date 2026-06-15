@@ -15,6 +15,13 @@
       "when": 1780336409892,
       "tag": "0001_warm_jasper_sitwell",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781567005064,
+      "tag": "0002_flashy_stryfe",
+      "breakpoints": true
     }
   ]
 }

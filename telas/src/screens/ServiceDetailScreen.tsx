@@ -13,14 +13,19 @@ const CHIPS_CATEGORIAS = [
   { id: 'saude', label: 'Saúde 🩺' }
 ];
 
+type SubAba = 'servicos' | 'agendamentos' | 'clientes';
+
 export default function ServiceDetailScreen({ route, navigation }: any) {
   const [userType, setUserType] = useState<string | null>(null);
   const [services, setServices] = useState([]);
-  const [bookings, setBookings] = useState([]); 
+  const [bookings, setBookings] = useState([]);
+  const [clientesAgendados, setClientesAgendados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
-  const [subAbaAtiva, setSubAbaAtiva] = useState<'servicos' | 'agendamentos'>('servicos');
+  const [subAbaAtiva, setSubAbaAtiva] = useState<SubAba>('servicos');
+  const [horariosOcupados, setHorariosOcupados] = useState<string[]>([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -38,41 +43,64 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
   }, [route?.params?.categoriaSelecionada, isFocused]);
 
   useEffect(() => {
-    if (isFocused) {
-      const loadAllData = async () => {
-        try {
-          setLoading(true);
-          const token = await AsyncStorage.getItem('@token_jwt');
-          const storedUserType = await AsyncStorage.getItem('@user_type'); 
-          setUserType(storedUserType);
+    if (!isFocused) return;
 
-          if (subAbaAtiva === 'servicos') {
-            const response = await fetch(`${API_URL}/api/profissional/servicos`, {
-              method: "GET",
-              headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
-            });
-            if (response.ok) setServices(await response.json());
-          } else {
-            const response = await fetch(`${API_URL}/api/servicos/agendados`, {
-              method: "GET",
-              headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
-            });
-            if (response.ok) setBookings(await response.json());
-          }
-        } catch (err) {
-          console.error("Erro ao carregar dados do servidor:", err);
-        } finally {
-          setLoading(false);
+    const loadAllData = async () => {
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem('@token_jwt');
+        const storedUserType = await AsyncStorage.getItem('@user_type'); 
+        setUserType(storedUserType);
+
+        if (subAbaAtiva === 'servicos') {
+          const response = await fetch(`${API_URL}/api/profissional/servicos`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
+          });
+          if (response.ok) setServices(await response.json());
+
+        } else if (subAbaAtiva === 'agendamentos') {
+          const response = await fetch(`${API_URL}/api/servicos/agendados`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
+          });
+          if (response.ok) setBookings(await response.json());
+
+        } else if (subAbaAtiva === 'clientes') {
+          const response = await fetch(`${API_URL}/api/profissional/agendamentos`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
+          });
+          if (response.ok) setClientesAgendados(await response.json());
         }
-      };
 
-      loadAllData();
-    }
+      } catch (err) {
+        console.error("Erro ao carregar dados do servidor:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllData();
   }, [isFocused, subAbaAtiva]); 
 
-  const handleAbrirAgendamento = (servico: any) => {
+  const handleAbrirAgendamento = async (servico: any) => {
     setSelectedService(servico);
+    setHorariosOcupados([]);
     setModalVisible(true);
+    setLoadingHorarios(true);
+
+    try {
+      const token = await AsyncStorage.getItem('@token_jwt');
+      const response = await fetch(`${API_URL}/api/servicos/${servico.id}/horarios-ocupados`, {
+        headers: { "Authorization": `Bearer ${token}`, "ngrok-skip-browser-warning": "true" }
+      });
+      if (response.ok) setHorariosOcupados(await response.json());
+    } catch {
+      setHorariosOcupados([]);
+    } finally {
+      setLoadingHorarios(false);
+    }
   };
 
   const handleConfirmarHorario = async (horarioEscolhido: string) => {
@@ -113,7 +141,6 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
             });
             if (response.ok) {
               Alert.alert("Sucesso 🎉", "Serviço excluído.");
-              // Simula um toggle rápido para re-disparar o useEffect de carregamento
               setSubAbaAtiva('servicos');
             }
           } catch (err) { 
@@ -136,7 +163,6 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
             });
             if (response.ok) {
               Alert.alert("Cancelado 🟢", "Agendamento excluído com sucesso.");
-              // Simula um toggle rápido para re-disparar o useEffect de carregamento
               setSubAbaAtiva('agendamentos');
             } else {
               Alert.alert("Erro", "Não foi possível cancelar o agendamento.");
@@ -156,26 +182,49 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
     return matchTexto && matchCategoria;
   });
 
+  const isPrestador = userType?.toLowerCase() === 'prestador';
+
   return (
     <View style={styles.container}>
       
-      {/* SELETOR DE SUB-ABAS SUPERIOR */}
+      {}
       <View style={styles.subAbaContainer}>
         <TouchableOpacity 
           style={[styles.subAbaButton, subAbaAtiva === 'servicos' && styles.subAbaButtonActive]}
           onPress={() => setSubAbaAtiva('servicos')}
         >
-          <Text style={[styles.subAbaText, subAbaAtiva === 'servicos' && styles.subAbaTextActive]}>Serviços</Text>
+          <Text style={[styles.subAbaText, subAbaAtiva === 'servicos' && styles.subAbaTextActive]}>
+            Serviços
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.subAbaButton, subAbaAtiva === 'agendamentos' && styles.subAbaButtonActive]}
-          onPress={() => setSubAbaAtiva('agendamentos')}
-        >
-          <Text style={[styles.subAbaText, subAbaAtiva === 'agendamentos' && styles.subAbaTextActive]}>Agendamentos 🗓️</Text>
-        </TouchableOpacity>
+
+        {}
+        {!isPrestador && (
+          <TouchableOpacity 
+            style={[styles.subAbaButton, subAbaAtiva === 'agendamentos' && styles.subAbaButtonActive]}
+            onPress={() => setSubAbaAtiva('agendamentos')}
+          >
+            <Text style={[styles.subAbaText, subAbaAtiva === 'agendamentos' && styles.subAbaTextActive]}>
+              Agendamentos 🗓️
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {}
+        {isPrestador && (
+          <TouchableOpacity 
+            style={[styles.subAbaButton, subAbaAtiva === 'clientes' && styles.subAbaButtonActive]}
+            onPress={() => setSubAbaAtiva('clientes')}
+          >
+            <Text style={[styles.subAbaText, subAbaAtiva === 'clientes' && styles.subAbaTextActive]}>
+              Clientes 👥
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      {subAbaAtiva === 'servicos' ? (
+      {/* ABA: SERVIÇOS */}
+      {subAbaAtiva === 'servicos' && (
         <>
           <TextInput
             style={styles.searchBar}
@@ -184,7 +233,6 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
             onChangeText={setSearch}
           />
 
-          {/* BARRA DE SELEÇÃO DE FILTROS HORIZONTAL */}
           <View style={{ maxHeight: 50, marginBottom: 15 }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContainer}>
               {CHIPS_CATEGORIAS.map((chip) => {
@@ -231,7 +279,7 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
                       <Text style={styles.contractButtonText}>Agendar</Text>
                     </TouchableOpacity>
 
-                    {userType?.toLowerCase() === 'prestador' && (
+                    {isPrestador && (
                       <TouchableOpacity style={[styles.contractButton, styles.deleteButton]} onPress={() => handleExcluirServico(item.id)}>
                         <Text style={styles.contractButtonText}>Excluir 🗑️</Text>
                       </TouchableOpacity>
@@ -243,40 +291,37 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
             />
           )}
         </>
-      ) : (
-        /* SUB-ABA DE LISTAGEM DE AGENDAMENTOS MUDADA PARA SER DINÂMICA */
+      )}
+
+      {}
+      {subAbaAtiva === 'agendamentos' && (
         loading ? (
           <ActivityIndicator size="large" color="#333" style={{ flex: 1 }} />
         ) : (
           <FlatList
             data={bookings}
-            keyExtractor={(item: any) => String(item.agendamentos?.id || item.id)}
+            keyExtractor={(item: any) => String(item.agendamentoId ?? item.id)}
             contentContainerStyle={{ paddingBottom: 90 }}
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <View style={styles.cardContent}>
-                  
-                  {/* Busca as variações do join do banco relacional para mostrar o nome real do serviço marcado */}
                   <Text style={styles.serviceName}>
-                    {item.nomeServico || item.servicos?.nome || item.servico?.nome || (item.nome ? item.nome : "Serviço Contratado")}
+                    {item.nomeServico ?? item.servicos?.nome ?? "Serviço Contratado"}
                   </Text>
-                  
                   <Text style={styles.serviceDesc}>
-                    ⏰ Horário Marcado: {item.agendamentos?.horario || item.horario}
+                    ⏰ Horário: {item.horario ?? item.agendamentos?.horario}
                   </Text>
-                  
                   <Text style={[
-                    styles.bookingStatus, 
-                    (item.agendamentos?.status === 'agendado' || item.status === 'agendado') && { color: '#22C55E' }
+                    styles.bookingStatus,
+                    (item.status === 'agendado' || item.agendamentos?.status === 'agendado') && { color: '#22C55E' }
                   ]}>
-                    STATUS: {(item.agendamentos?.status || item.status || 'CONFIRMADO').toUpperCase()}
+                    STATUS: {(item.status ?? item.agendamentos?.status ?? 'CONFIRMADO').toUpperCase()}
                   </Text>
                 </View>
-                
                 <View style={styles.actionsContainer}>
                   <TouchableOpacity 
                     style={[styles.contractButton, styles.deleteButton]} 
-                    onPress={() => handleCancelarAgendamento(item.agendamentos?.id || item.id)}
+                    onPress={() => handleCancelarAgendamento(item.agendamentoId ?? item.agendamentos?.id ?? item.id)}
                   >
                     <Text style={styles.contractButtonText}>Cancelar ❌</Text>
                   </TouchableOpacity>
@@ -288,6 +333,43 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
         )
       )}
 
+      {}
+      {subAbaAtiva === 'clientes' && (
+        loading ? (
+          <ActivityIndicator size="large" color="#333" style={{ flex: 1 }} />
+        ) : (
+          <FlatList
+            data={clientesAgendados}
+            keyExtractor={(item: any) => String(item.agendamentoId)}
+            contentContainerStyle={{ paddingBottom: 90 }}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.serviceName}>{item.nomeServico}</Text>
+                  <Text style={styles.serviceDesc}>⏰ Horário: {item.horario}</Text>
+
+                  <View style={styles.clienteContainer}>
+                    <Text style={styles.clienteLabel}>👤 Cliente</Text>
+                    <Text style={styles.clienteNome}>{item.clienteNome}</Text>
+                    {item.clienteEmail && (
+                      <Text style={styles.clienteEmail}>{item.clienteEmail}</Text>
+                    )}
+                  </View>
+
+                  <Text style={[
+                    styles.bookingStatus,
+                    item.status === 'agendado' && { color: '#22C55E' }
+                  ]}>
+                    STATUS: {(item.status ?? 'CONFIRMADO').toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>Nenhum cliente agendado ainda.</Text>}
+          />
+        )
+      )}
+
       {/* MODAL PARA ESCOLHER HORÁRIOS */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -295,13 +377,30 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
             <Text style={styles.modalTitle}>Escolha um Horário</Text>
             <Text style={styles.modalSubtitle}>Serviço: {selectedService?.nome}</Text>
 
-            <View style={styles.gridHorarios}>
-              {listaHorarios.map((horario) => (
-                <TouchableOpacity key={horario} style={styles.horarioCard} onPress={() => handleConfirmarHorario(horario)}>
-                  <Text style={styles.horarioText}>{horario}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {loadingHorarios ? (
+              <ActivityIndicator size="large" color="#333" style={{ marginVertical: 30 }} />
+            ) : (
+              <View style={styles.gridHorarios}>
+                {listaHorarios.map((horario) => {
+                  const ocupado = horariosOcupados.includes(horario);
+                  return (
+                    <TouchableOpacity
+                      key={horario}
+                      style={[styles.horarioCard, ocupado && styles.horarioOcupado]}
+                      onPress={() => !ocupado && handleConfirmarHorario(horario)}
+                      disabled={ocupado}
+                    >
+                      <Text style={[styles.horarioText, ocupado && styles.horarioTextoOcupado]}>
+                        {horario}
+                      </Text>
+                      {ocupado && (
+                        <Text style={styles.horarioLabelOcupado}>Ocupado</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
 
             <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeModalButtonText}>Cancelar</Text>
@@ -310,7 +409,7 @@ export default function ServiceDetailScreen({ route, navigation }: any) {
         </View>
       </Modal>
 
-      {userType?.toLowerCase() === 'prestador' && subAbaAtiva === 'servicos' && (
+      {isPrestador && subAbaAtiva === 'servicos' && (
         <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CreateProService')}>
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
@@ -354,7 +453,14 @@ const styles = StyleSheet.create({
   modalSubtitle: { fontSize: 14, color: '#666', marginBottom: 20, textAlign: 'center' },
   gridHorarios: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 },
   horarioCard: { backgroundColor: '#EFEFEF', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, width: '28%', alignItems: 'center' },
+  horarioOcupado: { backgroundColor: '#FFE5E5', borderWidth: 1, borderColor: '#FF3B30' },
   horarioText: { fontSize: 15, fontWeight: '600', color: '#333' },
+  horarioTextoOcupado: { color: '#FF3B30' },
+  horarioLabelOcupado: { fontSize: 9, color: '#FF3B30', fontWeight: 'bold', marginTop: 2 },
   closeModalButton: { marginTop: 10, padding: 15, alignItems: 'center' },
-  closeModalButtonText: { color: '#FF3B30', fontSize: 16, fontWeight: '600' }
+  closeModalButtonText: { color: '#FF3B30', fontSize: 16, fontWeight: '600' },
+  clienteContainer: { marginTop: 6, backgroundColor: '#F0F4FF', padding: 8, borderRadius: 8 },
+  clienteLabel: { fontSize: 11, color: '#666', fontWeight: 'bold', marginBottom: 2 },
+  clienteNome: { fontSize: 14, fontWeight: '700', color: '#333' },
+  clienteEmail: { fontSize: 12, color: '#555' },
 });

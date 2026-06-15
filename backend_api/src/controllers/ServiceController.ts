@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
 import { db } from '../db';
-import { servicos, agendamentos } from '../db/schema'; // ✅ Incluído agendamentos no import para cascata
+import { servicos, agendamentos, usuarios } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
 const SECRET = process.env.JWT_SECRET || '123';
 
 export const ServiceController = {
-  // 1. Criar / Catalogar Serviço
   async createService(req: Request, res: Response) {
     try {
       const { nome, preco, tempo_estimado, descricao } = req.body;
@@ -49,7 +48,6 @@ export const ServiceController = {
     }
   },
 
-  // 2. Excluir Serviço - Totalmente Protegido contra Erros de Chave Estrangeira
   async deleteService(req: Request, res: Response) {
     try {
       const { id } = req.params; 
@@ -58,13 +56,11 @@ export const ServiceController = {
       const serviceId = Number(id);
       console.log(`--> 🔴 INICIANDO REMOÇÃO EM CASCATA PARA O SERVIÇO ID: ${serviceId}`);
 
-      // PASSO 1: Deleta todos os agendamentos vinculados a este serviço primeiro
       await db.delete(agendamentos)
         .where(eq(agendamentos.servicoId, serviceId))
         .run();
       console.log("--> 🟢 Agendamentos vinculados ao serviço limpos com sucesso.");
 
-      // PASSO 2: Deleta o serviço definitivo da tabela
       const result = await db.delete(servicos)
         .where(eq(servicos.id, serviceId))
         .run();
@@ -84,7 +80,6 @@ export const ServiceController = {
     }
   },
 
-  // 3. Listar Serviços (Filtro por Prestador ou Geral)
   async listAllServices(req: Request, res: Response) {
     try {
       const authHeader = req.headers.authorization;
@@ -112,6 +107,63 @@ export const ServiceController = {
     } catch (error: any) {
       console.error("❌ ERRO AO LISTAR SERVIÇOS:", error);
       return res.status(500).json({ message: "Erro interno ao buscar serviços." });
+    }
+  },
+
+  async getHorariosOcupados(req: Request, res: Response) {
+    try {
+      const { servicoId } = req.params;
+      if (!servicoId) return res.status(400).json({ message: "ID do serviço não fornecido." });
+
+      const ocupados = await db
+        .select({ horario: agendamentos.horario })
+        .from(agendamentos)
+        .where(eq(agendamentos.servicoId, Number(servicoId)));
+
+      return res.json(ocupados.map(a => a.horario));
+
+    } catch (error: any) {
+      console.error("❌ ERRO AO BUSCAR HORÁRIOS OCUPADOS:", error);
+      return res.status(500).json({ message: "Erro interno ao buscar horários.", error: error.message });
+    }
+  },
+
+  // ✅ Retorna todos os agendamentos dos serviços do prestador logado, com dados do cliente
+  async listAgendamentosDoServico(req: Request, res: Response) {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) return res.status(401).json({ message: "Token não fornecido." });
+
+      const token = authHeader.split(' ')[1];
+      let decoded: { id: number, perfil: string };
+      try {
+        decoded = jwt.verify(token, SECRET) as { id: number, perfil: string };
+      } catch {
+        return res.status(401).json({ message: "Token inválido." });
+      }
+
+      if (decoded.perfil !== 'prestador') {
+        return res.status(403).json({ message: "Acesso negado." });
+      }
+
+      const resultado = await db
+        .select({
+          agendamentoId: agendamentos.id,
+          horario: agendamentos.horario,
+          status: agendamentos.status,
+          nomeServico: servicos.nome,
+          clienteNome: usuarios.nome,
+          clienteEmail: usuarios.email,
+        })
+        .from(agendamentos)
+        .innerJoin(servicos, eq(agendamentos.servicoId, servicos.id))
+        .innerJoin(usuarios, eq(agendamentos.clienteId, usuarios.id))
+        .where(eq(servicos.prestadorId, decoded.id));
+
+      return res.json(resultado);
+    } catch (error: any) {
+      console.error("❌ ERRO AO LISTAR AGENDAMENTOS DO PRESTADOR:", error);
+      return res.status(500).json({ message: "Erro interno.", error: error.message });
     }
   }
 };

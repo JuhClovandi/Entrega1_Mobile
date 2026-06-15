@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native'; // 👈 IMPORTANTE: Monitora o retorno para esta tela
+import { useIsFocused } from '@react-navigation/native';
 
 export default function WelcomeScreen({ navigation }: any) {
   const isFocused = useIsFocused();
@@ -35,7 +35,7 @@ export default function WelcomeScreen({ navigation }: any) {
           <Text style={styles.buttonText}>Criar conta</Text>
         </TouchableOpacity>
 
-        {/* 🛠️ Ajustado para bater no nome correto da sua tela de Login */}
+        {}
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginScreen')}>
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>

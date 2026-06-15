@@ -49,29 +49,8 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Profissionais Recomendados</Text>
         <View style={styles.recommendedRow}>
-          {[{ rating: '4.8' }, { rating: '4.9' }].map((p, index) => (
-            <View key={index} style={styles.recommendedCard}>
-              <Image
-                source={require('../../assets/images/PerfilRecomendado.jpeg')}
-                style={styles.recommendedAvatar}
-                resizeMode="cover"
-              />
-              <View style={styles.recommendedRating}>
-                <Text style={styles.star}>★</Text>
-                <Text style={styles.ratingText}>{p.rating}</Text>
-              </View>
-              <Text style={styles.recommendedName}>Nome</Text>
-              <TouchableOpacity
-                style={styles.profileButton}
-                onPress={() => navigation.navigate('Perfil')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.profileButtonText}>Ver perfil</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+  
         </View>
       </ScrollView>
     </SafeAreaView>

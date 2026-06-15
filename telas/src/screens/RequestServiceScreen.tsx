@@ -15,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../config'; 
 
 export default function RequestServiceScreen({ navigation }: any) {
-  // Estados para capturar os dados do formulário
   const [descricao, setDescricao] = useState('');
   const [dataServico, setDataServico] = useState('');
   const [horario, setHorario] = useState('');

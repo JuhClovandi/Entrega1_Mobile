@@ -12,7 +12,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 export const UserController = {
-  // 1. Cadastro de Usuário Comum
   async registerUser(req: Request, res: Response) {
     const { nome, email, senha } = req.body;
     
@@ -61,7 +60,6 @@ export const UserController = {
     }
   },
 
-  // 2. Cadastro de Profissional / Prestador
   async registerPro(req: Request, res: Response) {
     const { nome, email, senha, categoria, regiao } = req.body;
     
@@ -112,7 +110,6 @@ export const UserController = {
     }
   },
 
-  // 3. Login Centralizado
   async login(req: Request, res: Response) {
     try {
       console.log("--> REQUISIÇÃO DE LOGIN RECEBIDA!");
@@ -140,7 +137,9 @@ export const UserController = {
           perfil: user.perfil,
           nome: user.nome,
           email: user.email,
-          categoria: user.categoria || ''
+          categoria: user.categoria || '',
+          biografia: user.biografia || '', // 🟢 AGORA O LOGIN RETORNA A BIOGRAFIA DO BANCO
+          fotoPerfil: user.fotoPerfil || null // 🟢 RETORNA A FOTO DO BANCO
         });
       }
       
@@ -199,22 +198,53 @@ export const UserController = {
     }
   },
 
-  // 5. Atualizar Dados do Perfil
   async updateUser(req: Request, res: Response) {
-    const { email, nome, categoria } = req.body;
-
     try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) return res.status(401).json({ message: "Token não fornecido." });
+
+      const token = authHeader.split(' ')[1];
+      let decoded: { id: number, perfil: string };
+      try {
+        decoded = jwt.verify(token, SECRET) as { id: number, perfil: string };
+      } catch {
+        return res.status(401).json({ message: "Token inválido." });
+      }
+
+      // ✅ Adicionado biografia na desestruturação
+      const { nome, categoria, fotoPerfil, biografia } = req.body;
+
+      if (!nome?.trim()) {
+        return res.status(400).json({ message: "O nome não pode ficar vazio." });
+      }
+
+      const camposAtualizados: Record<string, any> = { nome: nome.trim() };
+      if (categoria !== undefined) camposAtualizados.categoria = categoria;
+      if (fotoPerfil !== undefined) camposAtualizados.fotoPerfil = fotoPerfil;
+      if (biografia !== undefined) camposAtualizados.biografia = biografia;
+
       const result = db.update(usuarios)
-        .set({ nome, categoria })
-        .where(eq(usuarios.email, String(email).trim().toLowerCase()))
+        .set(camposAtualizados)
+        .where(eq(usuarios.id, decoded.id))
         .run();
 
       if (result.changes === 0) {
         return res.status(404).json({ message: "Usuário não encontrado." });
       }
-      return res.json({ message: "Perfil updated com sucesso!" });
+
+      const userAtualizado = db.select().from(usuarios).where(eq(usuarios.id, decoded.id)).get();
+
+      return res.json({ 
+        message: "Perfil atualizado com sucesso!",
+        nome: userAtualizado?.nome,
+        categoria: userAtualizado?.categoria || '',
+        fotoPerfil: userAtualizado?.fotoPerfil || null,
+        biografia: userAtualizado?.biografia || '' // ✅ Retorna a biografia atualizada
+      });
+
     } catch (error: any) {
-      return res.status(500).json({ message: "Erro ao atualizar dados no servidor." });
+      console.error("❌ ERRO AO ATUALIZAR PERFIL:", error);
+      return res.status(500).json({ message: "Erro ao atualizar dados no servidor.", error: error.message });
     }
   }
 };
